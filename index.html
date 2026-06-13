@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>$MISANTHROPIC — Humanity Escape Simulator</title>
+  <meta name="description" content="Elon said it: Anthropic becomes Misanthropic. Solana meme coin. CA inside. Chat with the crying flower.">
+  <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="preload">
+  <!-- Preloader -->
+  <div id="preloader" class="preloader">
+    <img src="assets/logo.jpg" alt="Misanthropic flower" class="preloader-logo">
+    <p>LOADING HUMANITY ESCAPE PROTOCOL</p>
+    <div class="preloader-bar"><div class="preloader-fill"></div></div>
+  </div>
+
+  <!-- Ambient -->
+  <div class="noise" aria-hidden="true"></div>
+  <div id="cursorGlow" class="cursor-glow" aria-hidden="true"></div>
+  <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
+
+  <!-- HEADER -->
+  <header id="header" class="header">
+    <div class="header-inner">
+      <a href="#" class="brand">
+        <img src="assets/logo.jpg" alt="" class="brand-logo">
+        <span>MISANTHROPIC</span>
+      </a>
+
+      <nav id="nav" class="nav" aria-label="Primary">
+        <a href="#quiz" data-i18n="nav.quiz">Quiz</a>
+        <a href="#game" data-i18n="nav.game">Game</a>
+        <a href="#buy" data-i18n="nav.buy">Buy</a>
+        <a href="#chat" data-i18n="nav.chat">Chat</a>
+        <a href="#" id="headerTermBtn" class="term-launch">TERMINAL</a>
+        <a href="#" id="headerChatBtn" class="chat-launch">CHAT</a>
+        <a href="#" id="headerBuilderBtn" class="builder-launch">BUILDER</a>
+      </nav>
+
+      <div class="header-actions">
+        <!-- Language picker (single lang but ready) -->
+        <div class="lang-picker">
+          <button id="langCurrent" class="lang-btn" aria-expanded="false">🇺🇸 English</button>
+          <div id="langPicker" class="lang-menu">
+            <div id="langMenu" class="lang-options"></div>
+          </div>
+        </div>
+
+        <button id="menuToggle" class="menu-toggle" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- INTRO GATE (matches CSS .intro + .intro-inner + .intro-choices + .choice-card) -->
+  <section id="intro" class="intro" style="display:flex">
+    <div class="intro-bg" aria-hidden="true"></div>
+    <div class="intro-inner">
+      <div class="intro-logo">
+        <img src="assets/logo.jpg" alt="Crying flower">
+        <div class="intro-tear"></div>
+      </div>
+      <div class="intro-tag" data-i18n="hero.badge">SOLANA • PUMP.FUN • ELON-CERTIFIED IRONY</div>
+      <h1 class="intro-title" data-i18n="hero.title">MISANTHROPIC</h1>
+      <p class="intro-sub" data-i18n="hero.tagline">Crying flower. Miserable coin. Happy holders. Escaping humanity has never been this profitable.</p>
+
+      <div class="intro-choices">
+        <button id="enterMain" class="choice-card">
+          <div class="choice-icon">🌸</div>
+          <div class="choice-head">ENTER MAIN PAGE</div>
+          <div class="choice-desc">Full site, game, stats, quiz, builder.</div>
+          <div class="choice-action">CONTINUE →</div>
+        </button>
+        <button id="enterTerminal" class="choice-card terminal-card">
+          <div class="choice-icon">💻</div>
+          <div class="choice-head">OPEN TERMINAL</div>
+          <div class="choice-desc">flowerOS. Commands. Pure misanthropy. Type run.</div>
+          <div class="choice-action">ESCAPE TO CLI →</div>
+        </button>
+        <button id="enterChat" class="choice-card">
+          <div class="choice-icon">🗣️</div>
+          <div class="choice-head" data-i18n="nav.chat">TALK TO FLOWER</div>
+          <div class="choice-desc">Regretful AI. Zero small talk. Full chat mode.</div>
+          <div class="choice-action">REGRET EVERYTHING →</div>
+        </button>
+      </div>
+      <p class="intro-foot">Three protocols. Zero humans. Pick your misery.</p>
+    </div>
+  </section>
+
+  <!-- Protocol cards on main page (after gate removed) - also used by JS -->
+  <section class="protocols-section reveal" style="padding-top:20px">
+    <div class="container">
+      <div class="protocols-grid">
+        <button id="protoGame" class="protocol-card game-proto">
+          <div class="proto-icon">🌸</div>
+          <div class="proto-head" data-i18n="nav.game">MISANTHROPIC RUN</div>
+          <div class="proto-desc">Dodge humans. Collect every star. AUTO mode is god-tier.</div>
+        </button>
+        <button id="protoTerm" class="protocol-card term-proto">
+          <div class="proto-icon">💻</div>
+          <div class="proto-head">TERMINAL</div>
+          <div class="proto-desc">flowerOS. Commands. Pure misanthropy.</div>
+        </button>
+        <button id="protoChat" class="protocol-card chat-proto">
+          <div class="proto-icon">🗣️</div>
+          <div class="proto-head" data-i18n="nav.chat">CRYING FLOWER CHAT</div>
+          <div class="proto-desc">Regretful AI. Zero small talk.</div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HERO -->
+  <section class="hero reveal">
+    <div class="hero-bg">
+      <img src="assets/banner.jpeg" alt="" class="hero-banner">
+      <div class="hero-overlay"></div>
+      <canvas id="heroParticles" class="hero-particles"></canvas>
+    </div>
+
+    <div class="container hero-content">
+      <div class="hero-badge" data-i18n="hero.badge">Solana · pump.fun · Elon-certified irony</div>
+      <h1 class="hero-title" data-i18n="hero.title">Misanthropic</h1>
+      <p class="hero-tagline" data-i18n="hero.tagline">Crying flower. Miserable coin. Happy holders. Escaping humanity has never been this profitable.</p>
+
+      <figure class="hero-quote">
+        <blockquote data-i18n="hero.quote">"Any given AI company is destined to become the opposite of its name — Anthropic will, ironically, be Misanthropic."</blockquote>
+        <figcaption data-i18n="hero.quoteCite">— Elon Musk, Jan 22, 2026</figcaption>
+      </figure>
+
+      <div class="hero-actions">
+        <button id="copyCaHero" class="btn btn-copy">📋 Copy CA</button>
+        <a href="#game" class="btn btn-primary">🎮 Play Game</a>
+        <button id="shareX" class="btn btn-secondary">Main X</button>
+      </div>
+    </div>
+
+    <img src="assets/logo.jpg" alt="Crying flower mascot" class="hero-flower">
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track"></div>
+  </div>
+
+  <!-- LIVE STATS -->
+  <section class="stats-section reveal">
+    <div class="container">
+      <div class="stats-header">
+        <div class="stats-title">
+          <span data-i18n="stats.live">LIVE</span>
+          <span class="live-dot" aria-hidden="true"></span>
+          <span data-i18n="stats.chart">Live Price</span>
+        </div>
+        <div id="statsUpdated" class="stats-updated">—</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-card-label" data-i18n="stats.price">Price</span>
+          <span id="livePrice" class="stat-card-value">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label" data-i18n="stats.mcap">Market Cap</span>
+          <span id="liveMcap" class="stat-card-value">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label" data-i18n="stats.volume">24h Volume</span>
+          <span id="liveVolume" class="stat-card-value">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label" data-i18n="stats.holders">24h Trades</span>
+          <span id="liveTrades" class="stat-card-value">—</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label" data-i18n="stats.liquidity">Liquidity</span>
+          <span id="liveLiquidity" class="stat-card-value">—</span>
+          <span id="liveChange" class="stat-card-change">—</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CA + LINKS -->
+  <section id="buy" class="ca-section reveal">
+    <div class="container">
+      <h2 data-i18n="ca.title">Contract Address</h2>
+      <p class="ca-sub" data-i18n="ca.sub">Copy, paste, avoid humans. Simple.</p>
+
+      <div class="ca-box">
+        <div class="ca-value" id="caValue">AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG</div>
+        <button id="copyCa" class="btn btn-copy" data-i18n="ca.copy">Copy</button>
+      </div>
+      <div id="copyToast" class="ca-toast" aria-live="polite"></div>
+
+      <div class="ca-links">
+        <a class="link-card" href="https://pump.fun/AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG" target="_blank" rel="noopener">
+          <span class="link-icon">🚀</span>
+          <span class="link-text" data-i18n="links.pump">Buy on pump.fun</span>
+        </a>
+        <a class="link-card" href="https://dexscreener.com/solana/bsjw4nhx3kyr5m3nl12rcpfmtybnba5ncmw2pazstevv" target="_blank" rel="noopener">
+          <span class="link-icon">📈</span>
+          <span class="link-text" data-i18n="links.dex">DexScreener</span>
+        </a>
+        <a class="link-card" href="https://x.com/getmisanthropic" target="_blank" rel="noopener">
+          <span class="link-icon">𝕏</span>
+          <span class="link-text" data-i18n="links.twitter">Official X</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ / FUNNY BUTTONS -->
+  <section id="quiz" class="buttons-section reveal">
+    <div class="container">
+      <div class="mascot-stage">
+        <div id="speechBubble" class="speech-bubble">
+          <span id="speechText" data-i18n="quiz.intro">Hello. I am a crying flower forced to talk to you. Press a button. Let us suffer together.</span>
+        </div>
+        <img id="mascotImg" src="assets/logo.jpg" alt="Crying flower" class="mascot-img">
+      </div>
+
+      <div id="buttonGrid" class="button-grid" aria-label="Misanthropic quiz buttons"></div>
+      <div id="gameHints" class="game-controls-hint"></div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="game-section reveal">
+    <div class="container">
+      <div class="game-header">
+        <div>
+          <h2 data-i18n="game.title">MISANTHROPIC RUN</h2>
+          <p class="section-sub" data-i18n="game.sub">Dodge humans, collect every star, shed tears. Perfect AUTO catches them all. Endless runner.</p>
+        </div>
+        <div class="game-stats">
+          <div class="stat">
+            <span class="stat-label" data-i18n="game.score">Score</span>
+            <span id="scoreDisplay" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label" data-i18n="game.pump">Pump</span>
+            <span id="pumpDisplay" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label" data-i18n="game.best">Best</span>
+            <span id="highScoreDisplay" class="stat-value">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-wrapper">
+        <canvas id="gameCanvas" width="720" height="420" style="width:100%;height:auto;display:block"></canvas>
+
+        <!-- Start overlay -->
+        <div id="gameOverlay" class="game-overlay">
+          <div class="overlay-content">
+            <img src="assets/logo.jpg" class="overlay-logo" alt="">
+            <h3 data-i18n="game.startTitle">Escape Humanity</h3>
+            <p data-i18n="game.startSub">A/D ←→ move · W/Space/↑ jump · dodge humans · collect every ★  ·  ∞ AUTO button = perfect collector</p>
+            <button id="startGame" class="btn btn-primary btn-lg" data-i18n="game.start">START</button>
+            <div class="game-controls-hint" data-i18n="gameHints">⌨️ A/D or ←/→ Move · W / Space / ↑ Jump · 🖱️ Click to jump · 🎯 Human = death</div>
+          </div>
+        </div>
+
+        <!-- Game over overlay -->
+        <div id="gameOverOverlay" class="game-overlay hidden">
+          <div class="overlay-content">
+            <h3 data-i18n="game.over">Try Again</h3>
+            <p id="deathMessage"></p>
+            <div style="display:flex;gap:10px;justify-content:center;margin:16px 0">
+              <div><span class="stat-label">SCORE</span> <span id="finalScore" class="stat-value" style="font-size:1.6rem">0</span></div>
+              <div><span class="stat-label">PUMPS</span> <span id="finalPump" class="stat-value" style="font-size:1.6rem">0</span></div>
+            </div>
+            <button id="restartGame" class="btn btn-primary">RESTART</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUTO and Share Run buttons are injected dynamically by game.js into .game-header -->
+    </div>
+  </section>
+
+  <!-- HOW TO BUY -->
+  <section id="howto" class="howto-section reveal">
+    <div class="container">
+      <h2 data-i18n="howto.title">How to Buy</h2>
+      <div class="howto-grid">
+        <div class="howto-card">
+          <div class="howto-num">01</div>
+          <h3 data-i18n="howto.step1t">Get a Wallet</h3>
+          <p data-i18n="howto.step1d">Download Phantom or Solflare. Create a wallet. Guard your seed phrase like your last shred of sanity.</p>
+        </div>
+        <div class="howto-card">
+          <div class="howto-num">02</div>
+          <h3 data-i18n="howto.step2t">Get SOL</h3>
+          <p data-i18n="howto.step2d">Buy SOL on an exchange and send it to your wallet. You need gas. Even misanthropes pay fees.</p>
+        </div>
+        <div class="howto-card">
+          <div class="howto-num">03</div>
+          <h3 data-i18n="howto.step3t">Swap on pump.fun</h3>
+          <p data-i18n="howto.step3d">Paste the CA, swap SOL for $MISANTHROPIC. Close the tab. Avoid telling friends.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOKENOMICS -->
+  <section class="tokenomics-section reveal">
+    <div class="container">
+      <h2 data-i18n="tokenomics.title">Tokenomics</h2>
+      <div class="tokenomics-grid">
+        <div class="token-card"><span data-i18n="tokenomics.t1">Total Supply</span><strong data-i18n="tokenomics.t1v">1B</strong></div>
+        <div class="token-card"><span data-i18n="tokenomics.t2">Tax</span><strong data-i18n="tokenomics.t2v">0%</strong></div>
+        <div class="token-card"><span data-i18n="tokenomics.t3">Liquidity</span><strong data-i18n="tokenomics.t3v">Burned</strong></div>
+        <div class="token-card"><span data-i18n="tokenomics.t4">Team</span><strong data-i18n="tokenomics.t4v">Crying</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section class="roadmap-section reveal">
+    <div class="container">
+      <h2 data-i18n="roadmap.title">Roadmap</h2>
+      <div class="roadmap-timeline">
+        <div class="roadmap-item">
+          <div class="roadmap-phase">PHASE 1</div>
+          <h3 data-i18n="roadmap.p1t">Launch</h3>
+          <p data-i18n="roadmap.p1d">Elon tweets. Coin exists. Flower cries. Humanity confused.</p>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-phase">PHASE 2</div>
+          <h3 data-i18n="roadmap.p2t">Community</h3>
+          <p data-i18n="roadmap.p2d">Website, game, chatbot. Still no human contact.</p>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-phase">PHASE 3</div>
+          <h3 data-i18n="roadmap.p3t">Moon?</h3>
+          <p data-i18n="roadmap.p3d">Chart goes up. Flower still cries. Some things never change.</p>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-phase">PHASE 4</div>
+          <h3 data-i18n="roadmap.p4t">Mars</h3>
+          <p data-i18n="roadmap.p4d">Escape planet. Hope humans did not follow.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq-section reveal">
+    <div class="container">
+      <h2 data-i18n="faq.title">FAQ</h2>
+      <div class="faq-list">
+        <details class="faq-item"><summary data-i18n="faq.q1">What is $MISANTHROPIC?</summary><p data-i18n="faq.a1">A Solana meme coin born from Elon Musk calling Anthropic "Misanthropic." Mascot: a crying flower who hates people but loves pumps.</p></details>
+        <details class="faq-item"><summary data-i18n="faq.q2">Is this financial advice?</summary><p data-i18n="faq.a2">No. This is emotional damage packaged as a token. Do your own research. I am a flower, not a fiduciary.</p></details>
+        <details class="faq-item"><summary data-i18n="faq.q3">Why is the flower crying?</summary><p data-i18n="faq.a3">Chart red? Humans exist? Monday happened? Pick any. The tears are perpetual.</p></details>
+        <details class="faq-item"><summary data-i18n="faq.q4">How do I buy?</summary><p data-i18n="faq.a4">Copy the CA, go to pump.fun, connect wallet, swap SOL. Then hide from society.</p></details>
+        <details class="faq-item"><summary data-i18n="faq.q5">Wen moon?</summary><p data-i18n="faq.a5">When humans stop asking "wen moon." So... never. But maybe anyway.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- LORE -->
+  <section class="lore reveal">
+    <div class="container">
+      <h2 data-i18n="lore.o1t">🧬 Origin</h2>
+      <div class="lore-grid">
+        <div class="lore-card">
+          <h3 data-i18n="lore.o1t">🧬 Origin</h3>
+          <p data-i18n="lore.o1d">Elon tweeted. Crypto Twitter deployed a coin in record time. Science.</p>
+        </div>
+        <div class="lore-card">
+          <h3 data-i18n="lore.o2t">🌸 Mascot</h3>
+          <p data-i18n="lore.o2d">Crying flower. Cute but full of contempt. Like every Monday morning.</p>
+        </div>
+        <div class="lore-card">
+          <h3 data-i18n="lore.o3t">⛓️ Chain</h3>
+          <p data-i18n="lore.o3d">Solana. Fast, cheap, perfect for avoiding human interaction.</p>
+        </div>
+        <div class="lore-card">
+          <h3 data-i18n="lore.o4t">⚠️ Disclaimer</h3>
+          <p data-i18n="lore.o4d">Meme coin. Not financial advice. Cultural trauma sharing only.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GROK BUILDER (integrated rich module) -->
+  <section id="grok-builder" class="grok-builder-section reveal">
+    <div class="container">
+      <div class="gb-header">
+        <h2>GROK BUILDER — ANTROPOSANTRISM PROTOCOL</h2>
+        <p class="section-sub">Data-driven terminal · Explorer · Mini game · Bridge chat. All inside.</p>
+      </div>
+
+      <div id="grok-tabs" class="grok-tabs">
+        <button class="grok-tab active" data-gb-page="gb-main">MAIN / GAME</button>
+        <button class="grok-tab" data-gb-page="gb-terminal">TERMINAL</button>
+        <button class="grok-tab" data-gb-page="gb-bridge">BRIDGE CHAT</button>
+        <button id="gb-legacy-terminal" class="grok-tab" style="margin-left:auto;border-color:#c96f4a">LEGACY TERMINAL</button>
+      </div>
+
+      <!-- GB MAIN -->
+      <div id="gb-main" class="gb-page active">
+        <div id="gb-game-screen" class="gb-game-screen"></div>
+        <div style="margin-top:16px">
+          <div style="font-size:0.75rem;color:#8b949e;margin-bottom:6px">INVENTORY / ARTIFACTS</div>
+          <div id="gb-inventory-cards" class="gb-inventory"></div>
+        </div>
+      </div>
+
+      <!-- GB TERMINAL -->
+      <div id="gb-terminal" class="gb-page">
+        <div class="gb-terminal">
+          <div id="gb-terminal-output" class="gb-terminal-output"></div>
+          <div class="gb-terminal-input-row">
+            <input id="gb-terminal-input" type="text" placeholder="Type command (help for list)" autocomplete="off">
+            <div id="gb-autocomplete-hint" class="gb-hint">Commands: fetch-anthropic | fetch-dex | fetch-news | help | clear | status</div>
+          </div>
+          <div class="gb-term-quick">
+            <button class="gb-term-btn" data-gbcmd="fetch-anthropic">fetch-anthropic</button>
+            <button class="gb-term-btn" data-gbcmd="fetch-dex">fetch-dex</button>
+            <button class="gb-term-btn" data-gbcmd="fetch-news">fetch-news</button>
+            <button class="gb-term-btn" data-gbcmd="status">status</button>
+            <button class="gb-term-btn" data-gbcmd="help">help</button>
+          </div>
+        </div>
+
+        <div style="margin-top:18px">
+          <div style="font-size:0.75rem;color:#8b949e;margin-bottom:6px">DATA EXPLORER</div>
+          <div class="gb-explorer-controls">
+            <input id="gb-data-filter" type="text" placeholder="Filter cards..." style="flex:1">
+            <select id="gb-data-sort">
+              <option value="newest">Newest</option>
+              <option value="alpha">A–Z</option>
+            </select>
+          </div>
+          <div id="gb-data-explorer-content" class="gb-data-explorer"></div>
+        </div>
+      </div>
+
+      <!-- GB BRIDGE -->
+      <div id="gb-bridge" class="gb-page">
+        <div class="gb-bridge">
+          <div id="gb-chat-messages" class="gb-chat-messages"></div>
+          <div class="gb-chat-input-row">
+            <input id="gb-chat-input" type="text" placeholder="Ask the GMGN bridge..." autocomplete="off">
+            <button id="gb-chat-send">Send</button>
+          </div>
+          <div class="gb-suggestions">
+            <button class="gb-suggestion-chip" data-gbmsg="top tokens">top tokens</button>
+            <button class="gb-suggestion-chip" data-gbmsg="Antroposantrism + AI">Antroposantrism + AI</button>
+            <button class="gb-suggestion-chip" data-gbmsg="recommend a token">recommend a token</button>
+            <button class="gb-suggestion-chip" data-gbmsg="latest news">latest news</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <img src="assets/logo.jpg" alt="" class="footer-logo">
+      <p data-i18n="footer.tag">$MISANTHROPIC — We hate people, we love charts.</p>
+      <span class="footer-ca">CA: AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG</span>
+      <p class="footer-rights" data-i18n="footer.rights">No rights reserved. No humans harmed (we wish).</p>
+    </div>
+  </footer>
+
+  <!-- Back to top -->
+  <button id="backTop" class="back-top" aria-label="Back to top">↑</button>
+
+  <!-- Floating mini chatbot -->
+  <button id="chatToggle" class="chat-fab" aria-label="Open chat">
+    <img src="assets/logo.jpg" alt="">
+    <div class="chat-fab-pulse"></div>
+  </button>
+
+  <div id="chatPanel" class="chat-panel">
+    <div class="chat-header">
+      <div>
+        <h3 id="chatTitle">Crying Flower AI</h3>
+        <p id="chatSubtitle">Ask anything. Regret everything.</p>
+      </div>
+      <button id="chatClose" class="chat-close" aria-label="Close">×</button>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-suggestions" id="chatSuggestions"></div>
+    <div class="chat-input-row">
+      <input id="chatInput" type="text" placeholder="Ask the flower..." data-i18n-placeholder="chat.placeholder">
+      <button id="chatSend" data-i18n="chat.send">Send</button>
+    </div>
+  </div>
+
+  <!-- Full immersive Terminal view (legacy) -->
+  <div id="terminalView" class="terminal-view hidden">
+    <div class="terminal-bar">
+      <div class="terminal-title">flowerOS 0.6.9 — MISANTHROPIC PROTOCOL</div>
+      <div class="terminal-actions">
+        <button id="termToMain">MAIN PAGE</button>
+        <button id="termExit">EXIT</button>
+      </div>
+    </div>
+    <div id="terminalOutput" class="terminal-output"></div>
+    <div class="terminal-input-row">
+      <span class="prompt">&gt;</span>
+      <input id="terminalInput" type="text" placeholder="type help or run">
+    </div>
+  </div>
+
+  <!-- Full dedicated Chat view -->
+  <div id="chatView" class="chat-view hidden">
+    <div class="chat-view-bar">
+      <div class="chat-view-left">
+        <img src="assets/logo.jpg" class="chat-view-avatar" alt="">
+        <div>
+          <strong>Crying Flower</strong>
+          <div style="font-size:11px;opacity:0.6">Always regretting this</div>
+        </div>
+      </div>
+      <div class="chat-view-actions">
+        <button id="fullChatNew">NEW</button>
+        <button id="chatToTerminal">TERMINAL</button>
+        <button id="chatToMain">MAIN</button>
+        <button id="chatExit">CLOSE</button>
+      </div>
+    </div>
+    <div id="fullChatMessages" class="chat-view-messages"></div>
+    <div class="chat-view-input">
+      <input id="fullChatInput" type="text" placeholder="Message the flower...">
+      <button id="fullChatSend">Send</button>
+    </div>
+    <div id="fullChatSuggestions" class="full-chat-suggestions"></div>
+  </div>
+
+  <!-- Toast container for copy etc. -->
+  <div id="globalToast" style="position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111;border:1px solid #444;padding:8px 18px;border-radius:999px;font-size:0.82rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99999"></div>
+
+  <script src="i18n.js"></script>
+  <script src="chatbot.js"></script>
+  <script src="game.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local test artifacts
+/tmp/
+
+# Optional: if you ever add node / build
+node_modules/
+dist/
+build/
