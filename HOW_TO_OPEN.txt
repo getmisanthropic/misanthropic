@@ -1,0 +1,60 @@
+MISANTHROPIC SITE - HOW TO OPEN (EASY INSTRUCTIONS)
+
+1. Open the Terminal app (Cmd + Space, type "Terminal", press Enter).
+
+2. Paste the following command and press Enter:
+
+   cd ~/Desktop/misanthropic-site
+   bash "START SITE.command"
+
+   (This starts the server and tries to open the browser for you)
+
+3. When you see "Serving HTTP on ..." in the Terminal, the server is running.
+
+4. If the browser does NOT open or you get "this site can't be reached":
+
+   - Click the address bar at the VERY TOP of your browser (Chrome/Safari).
+     (NOT the Google search box! The long bar at the top of the page.)
+
+   - Delete everything in it.
+
+   - Paste exactly this:
+
+     http://127.0.0.1:8765
+
+   - Press Enter.
+
+   Alternative:
+     http://localhost:8765
+
+   NOTE: Just typing "localhost" will not work. You must include the port (:8765).
+
+5. Once the site loads, scroll down. The game, quiz, stats etc. will be visible.
+
+6. To close the site:
+   - Press Enter in the Terminal window (the script will stop the server).
+   - Or press Ctrl + C.
+
+NEW: AUTO INFINITE MODE — PERFECT STAR COLLECTOR (catches EVERY star)
+- Scroll to "MISANTHROPIC RUN".
+- Click "∞ AUTO (infinite run)" next to the stats.
+- The crying flower now plays perfectly: predictive jumps for high stars + aggressive steering.
+- It dodges all humans AND collects 100% of the stars (pumps). No more missed collectibles.
+- On "virtual hits" it instantly continues (no Game Over). Score + pumps keep rising forever.
+- AUTO badge on canvas + header shows "COLLECTING EVERY ★" + loop count (AUTO×N).
+- There is also a "⤴ Share run" button — copies nice stats text ready for X.
+- Console logs when perfect AUTO is active.
+- Click AUTO button again to stop.
+
+QUICK LAUNCH (zero clicks, perfect auto):
+  http://127.0.0.1:8765?auto   (or localhost:8765?auto)
+  → Game starts immediately in god-tier AUTO, catching every single star forever.
+
+SPEED: The game speed increases very slowly now and has a hard cap (~7.6). It never becomes crazy fast later. Enjoyable for hours / public demos.
+
+Important:
+- Keep the Terminal window open. Closing it stops the site.
+- Do not double-click the index.html directly. Always use this method.
+- If you still get "can't be reached", run the script again (first Ctrl+C to stop the old one).
+
+If problems continue, describe the steps here or paste the error message.
