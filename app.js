@@ -1317,6 +1317,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // === SCANNER VIEW WIRING ===
+  const enterScanner = document.getElementById('enterScanner');
+  if (enterScanner) {
+    enterScanner.addEventListener('click', () => {
+      hideIntro();
+      // ensure normal page elements are visible
+      document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
+      if (headerTermBtn) headerTermBtn.style.display = '';
+      if (headerChatBtn) headerChatBtn.style.display = '';
+      // show trending section and scroll to it
+      const trendingSection = document.getElementById('trending');
+      if (trendingSection) {
+        trendingSection.style.display = 'block';
+        renderTrendingCoins();
+        setTimeout(() => {
+          trendingSection.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    });
+  }
+
   if (chatToMain) {
     chatToMain.addEventListener('click', () => {
       hideFullChat();
@@ -1423,15 +1444,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (headerTermBtn) headerTermBtn.style.display = '';
       if (headerChatBtn) headerChatBtn.style.display = '';
       showFullChat();
-    });
-  }
-  if (protoScanner) {
-    protoScanner.addEventListener('click', () => {
-      if (intro) intro.style.display = 'none';
-      document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
-      if (headerTermBtn) headerTermBtn.style.display = '';
-      if (headerChatBtn) headerChatBtn.style.display = '';
-      toggleTrendingSection();
     });
   }
 
