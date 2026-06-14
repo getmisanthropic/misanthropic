@@ -606,10 +606,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchTrendingCoins() {
     try {
-      console.log('Fetching trending coins from pump.fun...');
+      console.log('Fetching trending coins from Netlify proxy...');
       
-      // Try pump.fun API endpoint - older version might be more stable
-      const response = await fetch('https://frontend-api.pump.fun/coins/trending');
+      // Use our Netlify proxy function to avoid CORS/Cloudflare issues
+      const response = await fetch('/.netlify/functions/trending');
       
       if (!response.ok) {
         console.error('Failed to fetch trending coins, status:', response.status);
@@ -617,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       const coins = await response.json();
-      console.log('Trending coins data:', coins);
+      console.log('Trending coins data from proxy:', coins);
       
       // Process the coins - make sure we have the right data structure
       let processedCoins = [];

@@ -109,17 +109,33 @@
 
   <main id="main" role="main">
 
-  <!-- HERO -->
-  <section id="trending" class="trending-section reveal" style="display:none;">
+  <!-- Trending Section (main page) -->
+  <section id="trending-main" class="trending-section reveal" style="display:none;">
     <div class="container">
       <div class="trending-header">
         <h2 class="trending-title">Trending</h2>
         <div class="trending-controls">
-          <button id="trendingPrev" class="trending-nav-btn">←</button>
-          <button id="trendingNext" class="trending-nav-btn">→</button>
+          <button id="trendingMainPrev" class="trending-nav-btn">←</button>
+          <button id="trendingMainNext" class="trending-nav-btn">→</button>
         </div>
       </div>
-      <div id="trendingTrack" class="trending-track">
+      <div id="trendingMainTrack" class="trending-track">
+        <!-- Trending coins will be loaded here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Trending Section (scanner) -->
+  <section id="trending-scanner" class="trending-section reveal" style="display:none;">
+    <div class="container">
+      <div class="trending-header">
+        <h2 class="trending-title">Trending</h2>
+        <div class="trending-controls">
+          <button id="trendingScannerPrev" class="trending-nav-btn">←</button>
+          <button id="trendingScannerNext" class="trending-nav-btn">→</button>
+        </div>
+      </div>
+      <div id="trendingScannerTrack" class="trending-track">
         <!-- Trending coins will be loaded here -->
       </div>
     </div>
