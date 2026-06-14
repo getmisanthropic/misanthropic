@@ -299,9 +299,15 @@
           <div class="overlay-content">
             <h3 data-i18n="game.over">Try Again</h3>
             <p id="deathMessage"></p>
-            <div style="display:flex;gap:10px;justify-content:center;margin:16px 0">
-              <div><span class="stat-label">SCORE</span> <span id="finalScore" class="stat-value" style="font-size:1.6rem">0</span></div>
-              <div><span class="stat-label">PUMPS</span> <span id="finalPump" class="stat-value" style="font-size:1.6rem">0</span></div>
+            <div class="game-over-summary">
+              <div class="game-over-stat">
+                <span class="stat-label">SCORE</span>
+                <span id="finalScore" class="stat-value">0</span>
+              </div>
+              <div class="game-over-stat">
+                <span class="stat-label">PUMPS</span>
+                <span id="finalPump" class="stat-value">0</span>
+              </div>
             </div>
             <button id="restartGame" class="btn btn-primary">RESTART</button>
           </div>

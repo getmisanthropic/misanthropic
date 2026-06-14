@@ -105,10 +105,37 @@ function rebuildFunnyButtons() {
   initFunnyButtons();
 }
 
-function initFunnyButtons() {
-  const grid = document.getElementById('buttonGrid');
+let speechHideTimeout = null;
+
+function setSpeechMessage(text, { autoHideMs = 0 } = {}) {
   const speechText = document.getElementById('speechText');
   const speechBubble = document.getElementById('speechBubble');
+  if (!speechText || !speechBubble) return;
+
+  if (speechHideTimeout) {
+    clearTimeout(speechHideTimeout);
+    speechHideTimeout = null;
+  }
+
+  speechText.style.opacity = '0';
+  setTimeout(() => {
+    speechText.textContent = text;
+    speechText.dataset.answered = '1';
+    speechText.style.opacity = '1';
+    speechBubble.classList.remove('pop');
+    void speechBubble.offsetWidth;
+    speechBubble.classList.add('pop');
+  }, 150);
+
+  if (autoHideMs > 0) {
+    speechHideTimeout = setTimeout(() => {
+      speechText.style.opacity = '0';
+    }, autoHideMs);
+  }
+}
+
+function initFunnyButtons() {
+  const grid = document.getElementById('buttonGrid');
   const mascotImg = document.getElementById('mascotImg');
   if (!grid) return;
 
@@ -116,22 +143,16 @@ function initFunnyButtons() {
   buttons.forEach((btn) => {
     const el = document.createElement('button');
     el.className = 'funny-btn';
+    el.type = 'button';
     el.innerHTML = `<span class="emoji">${btn.emoji}</span>${btn.label}`;
     el.addEventListener('click', () => {
-      const response = btn.responses[Math.floor(Math.random() * btn.responses.length)];
-      speechText.style.opacity = '0';
-      setTimeout(() => {
-        speechText.textContent = response;
-        speechText.dataset.answered = '1';
-        speechText.style.opacity = '1';
-        speechBubble.classList.remove('pop');
-        void speechBubble.offsetWidth;
-        speechBubble.classList.add('pop');
-        mascotImg.classList.remove('bounce');
-        void mascotImg.offsetWidth;
-        mascotImg.classList.add('bounce');
-        spawnParticles(el);
-      }, 150);
+      const pool = Array.isArray(btn.responses) && btn.responses.length ? btn.responses : [btn.label];
+      const response = pool[Math.floor(Math.random() * pool.length)];
+      setSpeechMessage(response);
+      mascotImg?.classList.remove('bounce');
+      void mascotImg?.offsetWidth;
+      mascotImg?.classList.add('bounce');
+      spawnParticles(el);
     });
     grid.appendChild(el);
   });
@@ -479,24 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showFlowerTooltip(text) {
-    const speechText = document.getElementById('speechText');
-    const speechBubble = document.getElementById('speechBubble');
-    if (!speechText || !speechBubble) return;
-    
-    speechText.style.opacity = '0';
-    setTimeout(() => {
-      speechText.textContent = text;
-      speechText.dataset.answered = '1';
-      speechText.style.opacity = '1';
-      speechBubble.classList.remove('pop');
-      void speechBubble.offsetWidth;
-      speechBubble.classList.add('pop');
-    }, 150);
-
-    // Hide after 2 seconds
-    setTimeout(() => {
-      speechText.style.opacity = '0';
-    }, 2000);
+    setSpeechMessage(text, { autoHideMs: 2000 });
   }
 
   // Also add click listener to hero flower
