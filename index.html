@@ -5,16 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>$MISANTHROPIC — Humanity Escape Simulator</title>
   <meta name="description" content="Elon said it: Anthropic becomes Misanthropic. Solana meme coin. CA inside. Chat with the crying flower.">
-  <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+  <link rel="icon" href="assets/flower.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="preload">
+  <!-- Fixed header offset applied via CSS on body.has-header -->
   <!-- Preloader -->
   <div id="preloader" class="preloader">
-    <img src="assets/logo.jpg" alt="Misanthropic flower" class="preloader-logo">
+    <img src="assets/flower.png" alt="Misanthropic flower mascot" width="90" height="90" class="preloader-logo">
     <p>LOADING HUMANITY ESCAPE PROTOCOL</p>
     <div class="preloader-bar"><div class="preloader-fill"></div></div>
   </div>
@@ -24,22 +25,25 @@
   <div id="cursorGlow" class="cursor-glow" aria-hidden="true"></div>
   <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
 
+  <!-- Mobile nav backdrop (tap to close) -->
+  <div id="navBackdrop" class="nav-backdrop" aria-hidden="true"></div>
+
   <!-- HEADER -->
   <header id="header" class="header">
     <div class="header-inner">
       <a href="#" class="brand">
-        <img src="assets/logo.jpg" alt="" class="brand-logo">
+        <img src="assets/flower.png" alt="Misanthropic logo" width="38" height="38" class="brand-logo">
         <span>MISANTHROPIC</span>
       </a>
 
       <nav id="nav" class="nav" aria-label="Primary">
+        <button id="navClose" class="nav-close" type="button" aria-label="Close menu">✕</button>
         <a href="#quiz" data-i18n="nav.quiz">Quiz</a>
         <a href="#game" data-i18n="nav.game">Game</a>
         <a href="#buy" data-i18n="nav.buy">Buy</a>
         <a href="#chat" data-i18n="nav.chat">Chat</a>
         <a href="#" id="headerTermBtn" class="term-launch">TERMINAL</a>
         <a href="#" id="headerChatBtn" class="chat-launch">CHAT</a>
-        <a href="#" id="headerBuilderBtn" class="builder-launch">BUILDER</a>
       </nav>
 
       <div class="header-actions">
@@ -51,7 +55,7 @@
           </div>
         </div>
 
-        <button id="menuToggle" class="menu-toggle" aria-label="Toggle menu">
+        <button id="menuToggle" class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="nav">
           <span></span><span></span><span></span>
         </button>
       </div>
@@ -63,7 +67,7 @@
     <div class="intro-bg" aria-hidden="true"></div>
     <div class="intro-inner">
       <div class="intro-logo">
-        <img src="assets/logo.jpg" alt="Crying flower">
+        <img src="assets/flower.png" alt="Crying flower mascot" width="92" height="92">
         <div class="intro-tear"></div>
       </div>
       <div class="intro-tag" data-i18n="hero.badge">SOLANA • PUMP.FUN • ELON-CERTIFIED IRONY</div>
@@ -74,15 +78,15 @@
         <button id="enterMain" class="choice-card">
           <div class="choice-icon">🌸</div>
           <div class="choice-head">ENTER MAIN PAGE</div>
-          <div class="choice-desc">Full site, game, stats, quiz, builder.</div>
+          <div class="choice-desc">Full site, game, stats, quiz.</div>
           <div class="choice-action">CONTINUE →</div>
         </button>
-        <button id="enterTerminal" class="choice-card terminal-card">
+        <div class="choice-card terminal-card" style="opacity:0.55;position:relative;">
+          <div style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:4px;font-size:9px;letter-spacing:1.5px;opacity:0.55;text-transform:uppercase;">COMING SOON</div>
           <div class="choice-icon">💻</div>
-          <div class="choice-head">OPEN TERMINAL</div>
-          <div class="choice-desc">flowerOS. Commands. Pure misanthropy. Type run.</div>
-          <div class="choice-action">ESCAPE TO CLI →</div>
-        </button>
+          <div class="choice-head">TERMINAL</div>
+          <div class="choice-desc">flowerOS. Commands. Pure misanthropy.</div>
+        </div>
         <button id="enterChat" class="choice-card">
           <div class="choice-icon">🗣️</div>
           <div class="choice-head" data-i18n="nav.chat">TALK TO FLOWER</div>
@@ -94,6 +98,8 @@
     </div>
   </section>
 
+  <main id="main" role="main">
+
   <!-- Protocol cards on main page (after gate removed) - also used by JS -->
   <section class="protocols-section reveal" style="padding-top:20px">
     <div class="container">
@@ -103,11 +109,12 @@
           <div class="proto-head" data-i18n="nav.game">MISANTHROPIC RUN</div>
           <div class="proto-desc">Dodge humans. Collect every star. AUTO mode is god-tier.</div>
         </button>
-        <button id="protoTerm" class="protocol-card term-proto">
+        <div class="protocol-card term-proto" style="opacity:0.55;position:relative;">
+          <div style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:4px;font-size:9px;letter-spacing:1.5px;opacity:0.55;text-transform:uppercase;">COMING SOON</div>
           <div class="proto-icon">💻</div>
           <div class="proto-head">TERMINAL</div>
           <div class="proto-desc">flowerOS. Commands. Pure misanthropy.</div>
-        </button>
+        </div>
         <button id="protoChat" class="protocol-card chat-proto">
           <div class="proto-icon">🗣️</div>
           <div class="proto-head" data-i18n="nav.chat">CRYING FLOWER CHAT</div>
@@ -120,7 +127,7 @@
   <!-- HERO -->
   <section class="hero reveal">
     <div class="hero-bg">
-      <img src="assets/banner.jpeg" alt="" class="hero-banner">
+      <img src="assets/banner.jpeg" alt="Misanthropic banner artwork" width="1920" height="1080" class="hero-banner">
       <div class="hero-overlay"></div>
       <canvas id="heroParticles" class="hero-particles"></canvas>
     </div>
@@ -138,11 +145,19 @@
       <div class="hero-actions">
         <button id="copyCaHero" class="btn btn-copy">📋 Copy CA</button>
         <a href="#game" class="btn btn-primary">🎮 Play Game</a>
-        <button id="shareX" class="btn btn-secondary">Main X</button>
+        <!-- Direct X profile link (replaces broken Share on X button) -->
+        <a href="https://x.com/getmisanthropic" class="x-profile-pill" target="_blank" rel="noopener noreferrer" aria-label="Follow @getmisanthropic on X">
+          <svg class="x-profile-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          <span>@getmisanthropic</span>
+        </a>
       </div>
     </div>
 
-    <img src="assets/logo.jpg" alt="Crying flower mascot" class="hero-flower">
+    <img src="assets/flower.png" alt="Crying flower mascot" id="flower-avatar" width="280" height="280" class="hero-flower">
+    <!-- Mobile-only scroll indicator -->
+    <a href="#buy" class="hero-scroll-indicator" aria-label="Scroll to contract address">
+      <span class="hero-scroll-chevron" aria-hidden="true"></span>
+    </a>
   </section>
 
   <!-- TICKER -->
@@ -201,15 +216,15 @@
       <div id="copyToast" class="ca-toast" aria-live="polite"></div>
 
       <div class="ca-links">
-        <a class="link-card" href="https://pump.fun/AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG" target="_blank" rel="noopener">
+        <a class="link-card" href="https://pump.fun/AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG" target="_blank" rel="noopener noreferrer">
           <span class="link-icon">🚀</span>
           <span class="link-text" data-i18n="links.pump">Buy on pump.fun</span>
         </a>
-        <a class="link-card" href="https://dexscreener.com/solana/bsjw4nhx3kyr5m3nl12rcpfmtybnba5ncmw2pazstevv" target="_blank" rel="noopener">
+        <a class="link-card" href="https://dexscreener.com/solana/bsjw4nhx3kyr5m3nl12rcpfmtybnba5ncmw2pazstevv" target="_blank" rel="noopener noreferrer">
           <span class="link-icon">📈</span>
           <span class="link-text" data-i18n="links.dex">DexScreener</span>
         </a>
-        <a class="link-card" href="https://x.com/getmisanthropic" target="_blank" rel="noopener">
+        <a class="link-card" href="https://x.com/getmisanthropic" target="_blank" rel="noopener noreferrer">
           <span class="link-icon">𝕏</span>
           <span class="link-text" data-i18n="links.twitter">Official X</span>
         </a>
@@ -222,9 +237,9 @@
     <div class="container">
       <div class="mascot-stage">
         <div id="speechBubble" class="speech-bubble">
-          <span id="speechText" data-i18n="quiz.intro">Hello. I am a crying flower forced to talk to you. Press a button. Let us suffer together.</span>
+          <span id="speechText" data-i18n="quiz.intro">Hello. I am a crying flower forced to talk to you. Click the flower to see suffering. Let us suffer together.</span>
         </div>
-        <img id="mascotImg" src="assets/logo.jpg" alt="Crying flower" class="mascot-img">
+        <img id="mascotImg" src="assets/flower.png" alt="Crying flower quiz mascot" width="118" height="118" loading="lazy" class="mascot-img">
       </div>
 
       <div id="buttonGrid" class="button-grid" aria-label="Misanthropic quiz buttons"></div>
@@ -257,12 +272,19 @@
       </div>
 
       <div class="game-wrapper">
-        <canvas id="gameCanvas" width="720" height="420" style="width:100%;height:auto;display:block"></canvas>
+        <canvas id="gameCanvas" width="720" height="420" style="width:100%;height:auto;display:block" aria-label="Misanthropic Run game canvas"></canvas>
+
+        <!-- Mobile touch controls (shown on small screens) -->
+        <div id="gameMobileControls" class="game-mobile-controls" aria-label="Game touch controls">
+          <button type="button" class="game-touch-btn" data-action="left" aria-label="Move left">←</button>
+          <button type="button" class="game-touch-btn game-touch-jump" data-action="jump" aria-label="Jump">↑</button>
+          <button type="button" class="game-touch-btn" data-action="right" aria-label="Move right">→</button>
+        </div>
 
         <!-- Start overlay -->
         <div id="gameOverlay" class="game-overlay">
           <div class="overlay-content">
-            <img src="assets/logo.jpg" class="overlay-logo" alt="">
+            <img src="assets/flower.png" class="overlay-logo" alt="Game mascot" width="76" height="76" loading="lazy">
             <h3 data-i18n="game.startTitle">Escape Humanity</h3>
             <p data-i18n="game.startSub">A/D ←→ move · W/Space/↑ jump · dodge humans · collect every ★  ·  ∞ AUTO button = perfect collector</p>
             <button id="startGame" class="btn btn-primary btn-lg" data-i18n="game.start">START</button>
@@ -393,83 +415,13 @@
     </div>
   </section>
 
-  <!-- GROK BUILDER (integrated rich module) -->
-  <section id="grok-builder" class="grok-builder-section reveal">
-    <div class="container">
-      <div class="gb-header">
-        <h2>GROK BUILDER — ANTROPOSANTRISM PROTOCOL</h2>
-        <p class="section-sub">Data-driven terminal · Explorer · Mini game · Bridge chat. All inside.</p>
-      </div>
 
-      <div id="grok-tabs" class="grok-tabs">
-        <button class="grok-tab active" data-gb-page="gb-main">MAIN / GAME</button>
-        <button class="grok-tab" data-gb-page="gb-terminal">TERMINAL</button>
-        <button class="grok-tab" data-gb-page="gb-bridge">BRIDGE CHAT</button>
-        <button id="gb-legacy-terminal" class="grok-tab" style="margin-left:auto;border-color:#c96f4a">LEGACY TERMINAL</button>
-      </div>
-
-      <!-- GB MAIN -->
-      <div id="gb-main" class="gb-page active">
-        <div id="gb-game-screen" class="gb-game-screen"></div>
-        <div style="margin-top:16px">
-          <div style="font-size:0.75rem;color:#8b949e;margin-bottom:6px">INVENTORY / ARTIFACTS</div>
-          <div id="gb-inventory-cards" class="gb-inventory"></div>
-        </div>
-      </div>
-
-      <!-- GB TERMINAL -->
-      <div id="gb-terminal" class="gb-page">
-        <div class="gb-terminal">
-          <div id="gb-terminal-output" class="gb-terminal-output"></div>
-          <div class="gb-terminal-input-row">
-            <input id="gb-terminal-input" type="text" placeholder="Type command (help for list)" autocomplete="off">
-            <div id="gb-autocomplete-hint" class="gb-hint">Commands: fetch-anthropic | fetch-dex | fetch-news | help | clear | status</div>
-          </div>
-          <div class="gb-term-quick">
-            <button class="gb-term-btn" data-gbcmd="fetch-anthropic">fetch-anthropic</button>
-            <button class="gb-term-btn" data-gbcmd="fetch-dex">fetch-dex</button>
-            <button class="gb-term-btn" data-gbcmd="fetch-news">fetch-news</button>
-            <button class="gb-term-btn" data-gbcmd="status">status</button>
-            <button class="gb-term-btn" data-gbcmd="help">help</button>
-          </div>
-        </div>
-
-        <div style="margin-top:18px">
-          <div style="font-size:0.75rem;color:#8b949e;margin-bottom:6px">DATA EXPLORER</div>
-          <div class="gb-explorer-controls">
-            <input id="gb-data-filter" type="text" placeholder="Filter cards..." style="flex:1">
-            <select id="gb-data-sort">
-              <option value="newest">Newest</option>
-              <option value="alpha">A–Z</option>
-            </select>
-          </div>
-          <div id="gb-data-explorer-content" class="gb-data-explorer"></div>
-        </div>
-      </div>
-
-      <!-- GB BRIDGE -->
-      <div id="gb-bridge" class="gb-page">
-        <div class="gb-bridge">
-          <div id="gb-chat-messages" class="gb-chat-messages"></div>
-          <div class="gb-chat-input-row">
-            <input id="gb-chat-input" type="text" placeholder="Ask the GMGN bridge..." autocomplete="off">
-            <button id="gb-chat-send">Send</button>
-          </div>
-          <div class="gb-suggestions">
-            <button class="gb-suggestion-chip" data-gbmsg="top tokens">top tokens</button>
-            <button class="gb-suggestion-chip" data-gbmsg="Antroposantrism + AI">Antroposantrism + AI</button>
-            <button class="gb-suggestion-chip" data-gbmsg="recommend a token">recommend a token</button>
-            <button class="gb-suggestion-chip" data-gbmsg="latest news">latest news</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+  </main>
 
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
-      <img src="assets/logo.jpg" alt="" class="footer-logo">
+      <img src="assets/flower.png" alt="Misanthropic footer logo" width="54" height="54" loading="lazy" class="footer-logo">
       <p data-i18n="footer.tag">$MISANTHROPIC — We hate people, we love charts.</p>
       <span class="footer-ca">CA: AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG</span>
       <p class="footer-rights" data-i18n="footer.rights">No rights reserved. No humans harmed (we wish).</p>
@@ -479,27 +431,7 @@
   <!-- Back to top -->
   <button id="backTop" class="back-top" aria-label="Back to top">↑</button>
 
-  <!-- Floating mini chatbot -->
-  <button id="chatToggle" class="chat-fab" aria-label="Open chat">
-    <img src="assets/logo.jpg" alt="">
-    <div class="chat-fab-pulse"></div>
-  </button>
 
-  <div id="chatPanel" class="chat-panel">
-    <div class="chat-header">
-      <div>
-        <h3 id="chatTitle">Crying Flower AI</h3>
-        <p id="chatSubtitle">Ask anything. Regret everything.</p>
-      </div>
-      <button id="chatClose" class="chat-close" aria-label="Close">×</button>
-    </div>
-    <div id="chatMessages" class="chat-messages"></div>
-    <div class="chat-suggestions" id="chatSuggestions"></div>
-    <div class="chat-input-row">
-      <input id="chatInput" type="text" placeholder="Ask the flower..." data-i18n-placeholder="chat.placeholder">
-      <button id="chatSend" data-i18n="chat.send">Send</button>
-    </div>
-  </div>
 
   <!-- Full immersive Terminal view (legacy) -->
   <div id="terminalView" class="terminal-view hidden">
@@ -513,7 +445,14 @@
     <div id="terminalOutput" class="terminal-output"></div>
     <div class="terminal-input-row">
       <span class="prompt">&gt;</span>
-      <input id="terminalInput" type="text" placeholder="type help or run">
+      <input id="terminalInput" type="text" placeholder="type help or run" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <!-- Mobile terminal command chips -->
+    <div id="terminalChips" class="terminal-chips" aria-label="Suggested terminal commands">
+      <button type="button" class="term-chip" data-cmd="help">help</button>
+      <button type="button" class="term-chip" data-cmd="about">about</button>
+      <button type="button" class="term-chip" data-cmd="skills">skills</button>
+      <button type="button" class="term-chip" data-cmd="projects">projects</button>
     </div>
   </div>
 
@@ -521,7 +460,7 @@
   <div id="chatView" class="chat-view hidden">
     <div class="chat-view-bar">
       <div class="chat-view-left">
-        <img src="assets/logo.jpg" class="chat-view-avatar" alt="">
+        <img src="assets/flower.png" class="chat-view-avatar" alt="Crying flower avatar" width="38" height="38">
         <div>
           <strong>Crying Flower</strong>
           <div style="font-size:11px;opacity:0.6">Always regretting this</div>
@@ -545,9 +484,9 @@
   <!-- Toast container for copy etc. -->
   <div id="globalToast" style="position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111;border:1px solid #444;padding:8px 18px;border-radius:999px;font-size:0.82rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99999"></div>
 
-  <script src="i18n.js"></script>
-  <script src="chatbot.js"></script>
-  <script src="game.js"></script>
-  <script src="app.js"></script>
+  <script src="i18n.js" defer></script>
+  <script src="chatbot.js" defer></script>
+  <script src="game.js" defer></script>
+  <script src="app.js" defer></script>
 </body>
 </html>

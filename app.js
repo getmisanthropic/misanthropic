@@ -116,12 +116,6 @@ function rebuildGameHints() {
   el.innerHTML = hints.map((h) => `<span>${h}</span>`).join('');
 }
 
-function initShareX() {
-  document.getElementById('shareX')?.addEventListener('click', () => {
-    window.open('https://x.com/getmisanthropic', '_blank', 'noopener');
-  });
-}
-
 const DEX_PAIR_SLUG = 'bsjw4nhx3kyr5m3nl12rcpfmtybnba5ncmw2pazstevv';
 
 async function fetchLiveStats() {
@@ -161,13 +155,18 @@ async function fetchLiveStats() {
     // Always update the timestamp on success — this proves continuous polling while the page is open
     updatedEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' • live';
   } catch (e) {
-    console.error('Live stats fetch failed:', e);
-    // Keep trying; show that it's in auto mode
+    // Silent retry — timestamp shows polling is active
     if (updatedEl) updatedEl.textContent = 'Live • retrying';
   }
 }
 
 function initScrollReveal() {
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) {
+    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('visible'));
+    return;
+  }
+
   const obs = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
       if (e.isIntersecting) {
@@ -177,9 +176,7 @@ function initScrollReveal() {
     });
   }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
 
-  const reveals = document.querySelectorAll('.reveal');
-  reveals.forEach((el) => {
-    // If already visible in initial viewport, show immediately (prevents blank page)
+  document.querySelectorAll('.reveal').forEach((el) => {
     const rect = el.getBoundingClientRect();
     if (rect.top < window.innerHeight * 0.95 && rect.bottom > 0) {
       el.classList.add('visible');
@@ -206,15 +203,27 @@ function initHeader() {
 function initMobileMenu() {
   const toggle = document.getElementById('menuToggle');
   const nav = document.getElementById('nav');
-  toggle?.addEventListener('click', () => {
-    nav?.classList.toggle('open');
-    toggle.classList.toggle('active');
-  });
+  const backdrop = document.getElementById('navBackdrop');
+  const closeBtn = document.getElementById('navClose');
+
+  function setOpen(open) {
+    nav?.classList.toggle('open', open);
+    toggle?.classList.toggle('active', open);
+    backdrop?.classList.toggle('open', open);
+    toggle?.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+
+  toggle?.addEventListener('click', () => setOpen(!nav?.classList.contains('open')));
+  closeBtn?.addEventListener('click', () => setOpen(false));
+  backdrop?.addEventListener('click', () => setOpen(false));
+
   nav?.querySelectorAll('a').forEach((a) => {
-    a.addEventListener('click', () => {
-      nav.classList.remove('open');
-      toggle.classList.remove('active');
-    });
+    a.addEventListener('click', () => setOpen(false));
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && nav?.classList.contains('open')) setOpen(false);
   });
 }
 
@@ -238,6 +247,11 @@ const particles = [];
 let particleCtx = null;
 
 function initParticles() {
+  // Skip heavy canvas particles on mobile / touch devices
+  if (window.matchMedia('(max-width: 768px), (pointer: coarse)').matches) {
+    document.getElementById('particleCanvas')?.remove();
+    return;
+  }
   const canvas = document.getElementById('particleCanvas');
   if (!canvas) return;
   particleCtx = canvas.getContext('2d');
@@ -302,6 +316,11 @@ function animateParticles() {
 }
 
 function initHeroParticles() {
+  // Simplified on mobile — CSS-only hero, no JS canvas tears
+  if (window.matchMedia('(max-width: 768px), (prefers-reduced-motion: reduce)').matches) {
+    document.getElementById('heroParticles')?.remove();
+    return;
+  }
   const canvas = document.getElementById('heroParticles');
   if (!canvas) return;
   const ctx = canvas.getContext('2d', { alpha: true });
@@ -354,12 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pre.classList.add('done');
         if (pre.parentNode) pre.parentNode.removeChild(pre);
       }
-      // Make every reveal element visible immediately (no more opacity 0 hiding the game/quiz/stats)
-      document.querySelectorAll('.reveal').forEach((el) => {
-        el.classList.add('visible');
-        // Optional: clean the class so no future surprises
-        // el.classList.remove('reveal');
-      });
+      document.body.classList.remove('preload');
     } catch (e) {}
   }
 
@@ -372,18 +386,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // We use an immediate call + 5s interval. Timestamp always refreshes on success so you can SEE it's live.
   function startLiveStatsPolling() {
     // First call right away (site just opened)
-    try { fetchLiveStats(); } catch (e) { console.error('initial fetchLiveStats failed', e); }
+    try { fetchLiveStats(); } catch (e) { /* initial fetch */ }
 
-    // Clear any previous just in case (hot reloads etc.)
     if (window.__liveStatsInterval) {
       clearInterval(window.__liveStatsInterval);
     }
     window.__liveStatsInterval = setInterval(() => {
-      try {
-        fetchLiveStats();
-      } catch (e) {
-        console.error('live poll error', e);
-      }
+      try { fetchLiveStats(); } catch (e) { /* poll retry */ }
     }, 5000);
   }
 
@@ -397,7 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initLangPicker();
   initCopyButtons();
   initFunnyButtons();
-  initShareX();
   initCursorGlow();
   initParticles();
   initHeroParticles();
@@ -408,14 +416,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // One last belt-and-suspenders after everything
   setTimeout(forceShowAll, 1200);
+
+
 });
 
 // Extra safety: if somehow still blank after full load, force one more time
 window.addEventListener('load', () => {
   setTimeout(() => {
-    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
     const pre = document.getElementById('preloader');
     if (pre) { pre.classList.add('done'); if (pre.parentNode) pre.parentNode.removeChild(pre); }
+    document.body.classList.remove('preload');
+    initScrollReveal();
   }, 200);
 });
 
@@ -444,19 +455,42 @@ window.addEventListener('load', () => {
   const chatToTerminal = document.getElementById('chatToTerminal');
   const chatExit = document.getElementById('chatExit');
   const fullChatNew = document.getElementById('fullChatNew');
-  const headerChatBtn = document.getElementById('headerChatBtn');
   const fullChatSuggestions = document.getElementById('fullChatSuggestions');
 
   // The 3 protocols cards on main page (game / terminal / misanthropic chat)
   const protoGame = document.getElementById('protoGame');
   const protoTerm = document.getElementById('protoTerm');
   const protoChat = document.getElementById('protoChat');
+  const headerTermBtn = document.getElementById('headerTermBtn');
+  const headerChatBtn = document.getElementById('headerChatBtn');
 
   let fullChatInitialized = false;
 
   let termLines = [];
   let termState = { pumps: 0, score: 0, mode: 'idle' };
   let termInterval = null;
+  let matrixInterval = null;
+
+  const X_HANDLE = 'getmisanthropic';
+  const SITE_COMMANDS = {
+    help: { desc: 'List all commands with descriptions', aliases: ['?'] },
+    about: { desc: 'Short bio and origin story' },
+    skills: { desc: 'Tech stack and capabilities' },
+    contact: { desc: 'Contact links and CA' },
+    social: { desc: 'All social media links' },
+    projects: { desc: 'Featured site projects' },
+    date: { desc: 'Current date and time' },
+    matrix: { desc: 'Fun ASCII matrix rain animation' },
+    theme: { desc: 'Toggle high-contrast text (accessibility)' },
+    ca: { desc: 'Show contract address' },
+    stats: { desc: 'Live protocol status' },
+    cry: { desc: 'Release emotional pressure' },
+    pump: { desc: 'Inject pumps into pool (pump N)' },
+    scan: { desc: 'Detect nearby humans' },
+    run: { desc: 'Launch MISANTHROPIC RUN text mode', aliases: ['start', 'play'] },
+    clear: { desc: 'Clear terminal output', aliases: ['cls'] },
+    exit: { desc: 'Return to intro gate', aliases: ['quit', 'back', 'gate'] },
+  };
 
   function showIntro() {
     if (intro) intro.style.display = 'flex';
@@ -543,12 +577,155 @@ window.addEventListener('load', () => {
     termState.score = s;
   }
 
+  function stopMatrix() {
+    if (matrixInterval) { clearInterval(matrixInterval); matrixInterval = null; }
+  }
+
+  function runMatrix() {
+    stopMatrix();
+    printTerm('Entering matrix... Type "clear" to stop.', 'sys');
+    const cols = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄ0123456789ABCDEF';
+    let row = 0;
+    matrixInterval = setInterval(() => {
+      if (termState.mode === 'running') { stopMatrix(); return; }
+      let line = '';
+      for (let i = 0; i < 42; i++) line += cols[Math.floor(Math.random() * cols.length)];
+      printTerm(line, 'ok');
+      row++;
+      if (row > 18) { stopMatrix(); printTerm('Matrix session ended.', 'sys'); }
+    }, 120);
+  }
+
+  function printHelp() {
+    printTerm('COMMANDS:', 'sys');
+    Object.keys(SITE_COMMANDS).forEach((name) => {
+      const c = SITE_COMMANDS[name];
+      const alias = c.aliases ? ` (${c.aliases.join(', ')})` : '';
+      printTerm(`  ${name.padEnd(12)} — ${c.desc}${alias}`, 'sys');
+    });
+    printTerm('');
+  }
+
+  function execIdleCommand(cmd, raw) {
+    const base = cmd.split(/\s+/)[0];
+
+    if (base === 'help' || cmd === '?') { printHelp(); return true; }
+
+    if (base === 'about') {
+      printTerm('Born from a single Elon tweet. Anthropic → Misanthropic.');
+      printTerm('Mascot: crying flower. Mission: escape humanity.');
+      printTerm('Chain: Solana. Tax: 0. Liquidity: burned. Team: crying.');
+      return true;
+    }
+
+    if (base === 'skills') {
+      printTerm('STACK:', 'sys');
+      printTerm('  Solana · pump.fun · DexScreener API');
+      printTerm('  HTML/CSS/JS · Canvas game · flowerOS terminal');
+      printTerm('  i18n · Live stats · Crying Flower AI chat');
+      return true;
+    }
+
+    if (base === 'contact') {
+      printTerm('CONTACT:', 'sys');
+      printTerm(`  X: https://x.com/${X_HANDLE}`);
+      printTerm(`  CA: ${CA}`);
+      printTerm('  pump.fun link on main page. No humans required.');
+      return true;
+    }
+
+    if (base === 'social') {
+      printTerm('SOCIAL:', 'sys');
+      printTerm(`  𝕏  https://x.com/${X_HANDLE}`);
+      printTerm('  🚀 pump.fun (CA on site)');
+      printTerm('  📈 DexScreener chart');
+      return true;
+    }
+
+    if (base === 'projects') {
+      printTerm('PROJECTS:', 'sys');
+      printTerm('  1. MISANTHROPIC RUN — canvas endless runner');
+      printTerm('  2. flowerOS Terminal — CLI escape protocol');
+      printTerm('  3. Crying Flower Chat — regretful AI');
+      return true;
+    }
+
+    if (base === 'date') {
+      const now = new Date();
+      printTerm(now.toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }), 'pump');
+      return true;
+    }
+
+    if (base === 'matrix') { runMatrix(); return true; }
+
+    if (base === 'theme') {
+      document.body.classList.toggle('high-contrast-text');
+      const on = document.body.classList.contains('high-contrast-text');
+      printTerm(on ? 'High-contrast text: ON' : 'High-contrast text: OFF', 'sys');
+      printTerm('(Background unchanged. Dark mode is permanent.)', 'warn');
+      return true;
+    }
+
+    if (base === 'ca') {
+      printHTML(`CA: <span style="color:#4ecdc4">${CA}</span>`);
+      printTerm('Copy it. Trade it. Then disappear.', 'sys');
+      return true;
+    }
+
+    if (base === 'stats') {
+      printTerm(`PUMPS: ${termState.pumps}    SCORE: ${termState.score}`, 'pump');
+      printTerm('LIQUIDITY: infinite tears');
+      printTerm('HUMAN PROXIMITY: critical (always)');
+      return true;
+    }
+
+    if (base === 'cry') {
+      const tears = Math.floor(Math.random() * 3) + 2;
+      printTerm('💧 '.repeat(tears) + '  (emotional liquidity added)', 'warn');
+      termState.pumps = Math.max(0, termState.pumps - 1);
+      return true;
+    }
+
+    if (base === 'pump') {
+      const n = cmd === 'pump' ? 1 : (parseInt(cmd.split(' ')[1], 10) || 1);
+      termState.pumps += n;
+      printTerm(`✨ +${n} PUMP${n > 1 ? 'S' : ''}. Chart smiles for 0.4 seconds.`, 'pump');
+      return true;
+    }
+
+    if (base === 'scan') {
+      const humans = ['👨‍👩‍👧‍👦 family unit', '🧑‍🤝‍🧑 group chat', '🗣️ "GM" spammer', '💼 networking drone', '🤝 unsolicited advice bot'];
+      printTerm('SCAN RESULT: ' + humans[Math.floor(Math.random() * humans.length)] + ' detected at 9m.', 'human');
+      printTerm('Recommended action: RUN or JUMP.', 'warn');
+      return true;
+    }
+
+    if (base === 'run' || base === 'start' || base === 'play') {
+      stopMatrix();
+      startRunner();
+      return true;
+    }
+
+    if (base === 'clear' || base === 'cls') {
+      stopMatrix();
+      clearTerm();
+      return true;
+    }
+
+    if (base === 'exit' || base === 'quit' || base === 'back' || base === 'gate') {
+      printTerm('Returning to gate...', 'sys');
+      setTimeout(() => { hideTerminal(); showIntro(); }, 280);
+      return true;
+    }
+
+    return false;
+  }
+
   // === COMMAND HANDLER ===
   function handleCommand(raw) {
     const cmd = raw.trim().toLowerCase();
     if (!cmd) return;
 
-    // echo the command
     printTerm('> ' + raw, 'ok');
 
     if (termState.mode === 'running') {
@@ -556,85 +733,8 @@ window.addEventListener('load', () => {
       return;
     }
 
-    switch (cmd) {
-      case 'help':
-      case '?':
-        printTerm('COMMANDS:', 'sys');
-        printTerm('  help          — this list');
-        printTerm('  about         — origin story');
-        printTerm('  ca            — contract address');
-        printTerm('  stats         — live protocol status');
-        printTerm('  cry           — release pressure');
-        printTerm('  pump [n]      — inject pumps into pool');
-        printTerm('  scan          — detect nearby humans');
-        printTerm('  run           — launch MISANTHROPIC RUN (text mode)');
-        printTerm('  clear         — clear screen');
-        printTerm('  exit          — return to gate');
-        printTerm('');
-        break;
-
-      case 'about':
-        printTerm('Born from a single Elon tweet. Anthropic → Misanthropic.');
-        printTerm('Mascot: crying flower. Mission: escape humanity.');
-        printTerm('Chain: Solana. Tax: 0. Liquidity: burned. Team: crying.');
-        break;
-
-      case 'ca':
-        printHTML('CA: <span style="color:#4ecdc4">AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG</span>');
-        printTerm('Copy it. Trade it. Then disappear.', 'sys');
-        break;
-
-      case 'stats':
-        printTerm(`PUMPS: ${termState.pumps}    SCORE: ${termState.score}`, 'pump');
-        printTerm('LIQUIDITY: infinite tears');
-        printTerm('HUMAN PROXIMITY: critical (always)');
-        break;
-
-      case 'cry':
-        const tears = Math.floor(Math.random() * 3) + 2;
-        printTerm('💧 '.repeat(tears) + '  (emotional liquidity added)', 'warn');
-        termState.pumps = Math.max(0, termState.pumps - 1);
-        break;
-
-      case 'pump':
-      case 'pump 1':
-        termState.pumps += 1;
-        printTerm('✨ +1 PUMP injected. Chart smiles for 0.4 seconds.', 'pump');
-        break;
-
-      default:
-        if (cmd.startsWith('pump ')) {
-          const n = parseInt(cmd.split(' ')[1], 10) || 1;
-          termState.pumps += n;
-          printTerm(`✨ +${n} PUMPS. The flower is slightly less miserable.`, 'pump');
-          break;
-        }
-        if (cmd === 'scan' || cmd === 'scan humans') {
-          const humans = ['👨‍👩‍👧‍👦 family unit', '🧑‍🤝‍🧑 group chat', '🗣️ "GM" spammer', '💼 networking drone', '🤝 unsolicited advice bot'];
-          const h = humans[Math.floor(Math.random()*humans.length)];
-          printTerm('SCAN RESULT: ' + h + ' detected at 9m.', 'human');
-          printTerm('Recommended action: RUN or JUMP.', 'warn');
-          break;
-        }
-        if (cmd === 'run' || cmd === 'start' || cmd === 'play') {
-          startRunner();
-          break;
-        }
-        if (cmd === 'clear' || cmd === 'cls') {
-          clearTerm();
-          break;
-        }
-        if (cmd === 'exit' || cmd === 'quit' || cmd === 'back' || cmd === 'gate') {
-          printTerm('Returning to gate...', 'sys');
-          setTimeout(() => {
-            hideTerminal();
-            showIntro();
-          }, 280);
-          break;
-        }
-        // fallback
-        printTerm('Unknown command. Type "help".', 'err');
-        printTerm('Or just "run" if you want to escape.', 'sys');
+    if (!execIdleCommand(cmd, raw)) {
+      printTerm("Command not found. Type 'help' for a list of commands.", 'err');
     }
   }
 
@@ -791,7 +891,7 @@ window.addEventListener('load', () => {
 
     if (who === 'bot') {
       div.innerHTML = `
-        <img src="assets/logo.jpg" class="chat-view-avatar-msg" alt="">
+        <img src="assets/flower.png" class="chat-view-avatar-msg" alt="">
         <div class="chat-view-bubble">${escapeHtml(text)}</div>
       `;
     } else {
@@ -811,7 +911,7 @@ window.addEventListener('load', () => {
     if (!fullChatMessages) return null;
     const div = document.createElement('div');
     div.className = 'chat-view-msg bot chat-view-typing';
-    div.innerHTML = `<img src="assets/logo.jpg" class="chat-view-avatar-msg" alt=""><div class="chat-view-bubble"><span></span><span></span><span></span></div>`;
+    div.innerHTML = `<img src="assets/flower.png" class="chat-view-avatar-msg" alt=""><div class="chat-view-bubble"><span></span><span></span><span></span></div>`;
     fullChatMessages.appendChild(div);
     fullChatMessages.scrollTop = fullChatMessages.scrollHeight;
     return div;
@@ -861,27 +961,17 @@ window.addEventListener('load', () => {
     }
   }
 
-  function sendFullChatMessage(text) {
+  async function sendFullChatMessage(text) {
     const typing = showTypingFull();
 
-    // Use the exact same brain as the floating chatbot
-    setTimeout(() => {
+    try {
+      const reply = await window.fetchFlowerReply(text);
       if (typing && typing.parentNode) typing.parentNode.removeChild(typing);
-
-      let reply = 'I have nothing for you. Copy the CA and leave.';
-      try {
-        if (typeof window.getChatResponse === 'function') {
-          reply = window.getChatResponse(text);
-        } else if (window.Chatbot && typeof window.Chatbot.submit === 'function') {
-          // fallback: the existing one has internal logic, but we already have global getChatResponse in most cases
-        } else {
-          // last resort simple
-          reply = 'Humans and their questions. The CA is AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG. Now go.';
-        }
-      } catch (e) {}
-
       appendFullMessage(reply, 'bot');
-    }, 620 + Math.random() * 520);
+    } catch (err) {
+      if (typing && typing.parentNode) typing.parentNode.removeChild(typing);
+      appendFullMessage(err.message || 'Request failed', 'bot');
+    }
   }
 
   // === WIRE UP BUTTONS ===
@@ -974,7 +1064,7 @@ window.addEventListener('load', () => {
     });
   }
 
-  // Terminal input
+  // Terminal input + mobile command chips
   if (termInput) {
     termInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -985,8 +1075,17 @@ window.addEventListener('load', () => {
     });
   }
 
+  document.querySelectorAll('.term-chip[data-cmd]').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const c = chip.dataset.cmd;
+      if (c && termInput) {
+        handleCommand(c);
+        termInput.focus();
+      }
+    });
+  });
+
   // Header "TERMINAL" button (visible on main page)
-  const headerTermBtn = document.getElementById('headerTermBtn');
   if (headerTermBtn) {
     headerTermBtn.addEventListener('click', () => {
       // if intro still present, remove it first so we go straight to main + terminal
@@ -1109,7 +1208,28 @@ window.addEventListener('load', () => {
   let commandHistory = [];
   let historyIndex = -1;
 
-  const COMMANDS = ['fetch-anthropic', 'fetch-dex', 'fetch-news', 'help', 'clear', 'status', 'list'];
+  const COMMANDS = [
+    'fetch-anthropic', 'fetch-dex', 'fetch-news', 'help', 'clear', 'status', 'list',
+    'about', 'skills', 'contact', 'social', 'projects', 'date', 'matrix', 'ca'
+  ];
+
+  const GB_CMD_HELP = {
+    'fetch-anthropic': 'Fetch themed Anthropic insights (mock data)',
+    'fetch-dex': 'Pull crypto data from Dexscreener',
+    'fetch-news': 'Get latest headlines (mock data)',
+    'status': 'Show current data and game state',
+    'list': 'Refresh data explorer',
+    'clear': 'Clear terminal output',
+    'help': 'List all commands',
+    'about': 'About $MISANTHROPIC',
+    'skills': 'Site tech stack',
+    'contact': 'Contact links',
+    'social': 'Social media links',
+    'projects': 'Featured projects',
+    'date': 'Current date/time',
+    'matrix': 'ASCII matrix animation',
+    'ca': 'Show contract address',
+  };
 
   // === MOCK DATA (themed to Antroposantrism + Anthropic) ===
   function getMockAnthropic() {
@@ -1275,16 +1395,10 @@ window.addEventListener('load', () => {
     const lower = cmd.toLowerCase();
 
     if (lower === 'help') {
-      addGbTermLines([
-        'Available commands:',
-        '  fetch-anthropic   — fetch data from Anthropic API',
-        '  fetch-dex         — pull crypto data from Dexscreener',
-        '  fetch-news        — get latest headlines from CNN Jane or DK Screen',
-        '  status            — show current data state',
-        '  list              — refresh data explorer',
-        '  clear             — clear terminal',
-        '  help              — this message'
-      ], 'info');
+      addGbTermLines(['Available commands:'], 'info');
+      Object.keys(GB_CMD_HELP).forEach((k) => {
+        addGbTerm(`  ${k.padEnd(18)} — ${GB_CMD_HELP[k]}`, 'info');
+      });
       return;
     }
     if (lower === 'clear' || lower === 'cls') { clearGbTerm(); return; }
@@ -1297,11 +1411,45 @@ window.addEventListener('load', () => {
     }
     if (lower === 'list') { renderExplorer(); addGbTerm('Explorer refreshed.', 'info'); return; }
 
+    if (lower === 'about') {
+      addGbTermLines(['$MISANTHROPIC — Solana meme coin from Elon\'s Misanthropic tweet.', 'Mascot: crying flower. Mission: escape humanity.'], 'info');
+      return;
+    }
+    if (lower === 'skills') {
+      addGbTermLines(['Solana · pump.fun · DexScreener · Canvas game · flowerOS · AI chat'], 'info');
+      return;
+    }
+    if (lower === 'contact' || lower === 'social') {
+      addGbTermLines([`X: https://x.com/getmisanthropic`, `CA: ${window.CA || CA}`, 'pump.fun + DexScreener on main page'], 'info');
+      return;
+    }
+    if (lower === 'projects') {
+      addGbTermLines(['1. MISANTHROPIC RUN  2. flowerOS  3. Crying Flower Chat  4. Grok Builder'], 'info');
+      return;
+    }
+    if (lower === 'date') {
+      addGbTerm(new Date().toLocaleString(), 'info');
+      return;
+    }
+    if (lower === 'matrix') {
+      const cols = '01アイウエオカキ';
+      for (let i = 0; i < 12; i++) {
+        let line = '';
+        for (let j = 0; j < 36; j++) line += cols[Math.floor(Math.random() * cols.length)];
+        addGbTerm(line, 'success');
+      }
+      return;
+    }
+    if (lower === 'ca') {
+      addGbTerm(`CA: ${window.CA || CA}`, 'success');
+      return;
+    }
+
     if (lower === 'fetch-anthropic') { simulateGbFetch('anthropic'); return; }
     if (lower === 'fetch-dex') { simulateGbFetch('dex'); return; }
     if (lower === 'fetch-news') { simulateGbFetch('news'); return; }
 
-    addGbTerm(`Unknown command: "${cmd}". Type "help".`, 'error');
+    addGbTerm("Command not found. Type 'help' for a list of commands.", 'error');
   }
 
   function initGbTerminal() {
@@ -1696,48 +1844,9 @@ window.addEventListener('load', () => {
   // === BOOT THE BUILDER ===
   function bootGrokBuilder() {
     // Tab clicks
-    tabsContainer.querySelectorAll('.grok-tab').forEach(btn => {
+    tabsContainer.querySelectorAll('.grok-tab[data-gb-page]').forEach(btn => {
       btn.addEventListener('click', () => showGbPage(btn.dataset.gbPage));
     });
-
-    // Wire protocol cards + intro "MAIN PAGE" to land on the builder
-    const wireToBuilder = (el, tab) => {
-      if (!el) return;
-      el.addEventListener('click', (e) => {
-        // allow default for some, but ensure we show builder
-        setTimeout(() => {
-          const sec = document.getElementById('grok-builder');
-          if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          showGbPage(tab);
-        }, 60);
-      });
-    };
-
-    // The three protocol buttons on main page
-    wireToBuilder(document.getElementById('protoTerm'), 'gb-terminal');
-    wireToBuilder(document.getElementById('protoChat'), 'gb-bridge');
-
-    // Make the game protocol card open the main tab of the builder
-    const protoGame = document.getElementById('protoGame');
-    if (protoGame) {
-      protoGame.addEventListener('click', () => {
-        const sec = document.getElementById('grok-builder');
-        if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setTimeout(() => showGbPage('gb-main'), 420);
-      });
-    }
-
-    // Intro gate "MAIN PAGE" button → builder main
-    const enterMain = document.getElementById('enterMain');
-    if (enterMain) {
-      enterMain.addEventListener('click', () => {
-        setTimeout(() => {
-          const sec = document.getElementById('grok-builder');
-          if (sec) sec.scrollIntoView({ behavior: 'smooth' });
-          showGbPage('gb-main');
-        }, 380);
-      });
-    }
 
     // Init sub modules
     initGbTerminal();
@@ -1822,42 +1931,12 @@ window.addEventListener('load', () => {
         const introEl = document.getElementById('intro');
         if (introEl && introEl.parentNode) introEl.parentNode.removeChild(introEl);
         document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
-        // Show the classic immersive terminal (flowerOS)
         if (typeof window.__openTerminal === 'function') {
           window.__openTerminal();
         } else if (typeof window.openTerminal === 'function') {
           window.openTerminal();
         }
       });
-    }
-
-    // Re-wire the intro gate Terminal/Chat buttons to the new Grok Builder (rich version)
-    // The old immersive views remain accessible via the classic terminal code if needed.
-    const enterTerminalGate = document.getElementById('enterTerminal');
-    const enterChatGate = document.getElementById('enterChat');
-
-    if (enterTerminalGate) {
-      // We keep the original listener but add our own that takes precedence for the rich Grok experience
-      enterTerminalGate.addEventListener('click', (e) => {
-        // Let the original code run for the gate hide, then redirect to Grok
-        setTimeout(() => {
-          const introEl = document.getElementById('intro');
-          if (introEl && introEl.parentNode) introEl.parentNode.removeChild(introEl);
-          document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
-          goToGrok('gb-terminal');
-        }, 50);
-      }, { capture: true });
-    }
-
-    if (enterChatGate) {
-      enterChatGate.addEventListener('click', (e) => {
-        setTimeout(() => {
-          const introEl = document.getElementById('intro');
-          if (introEl && introEl.parentNode) introEl.parentNode.removeChild(introEl);
-          document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
-          goToGrok('gb-bridge');
-        }, 50);
-      }, { capture: true });
     }
   }
 
@@ -1868,3 +1947,13 @@ window.addEventListener('load', () => {
     bootGrokBuilder();
   }
 })();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const flower = document.getElementById('flower-avatar');
+    if (flower) {
+        flower.addEventListener('click', () => {
+            flower.classList.add('crying');
+            setTimeout(() => flower.classList.remove('crying'), 2000);
+        });
+    }
+});

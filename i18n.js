@@ -26,7 +26,7 @@ const T = {
       quoteCite: '— Elon Musk, Jan 22, 2026',
       copyCa: '📋 Copy CA',
       playGame: '🎮 Play Game',
-      shareX: 'Main X',
+      shareX: '@getmisanthropic',
     },
     ticker: ['🌸 MISANTHROPIC', '💧 Tears = Liquidity', '🚀 Born from an Elon tweet', '😤 We hate people, we love pumps', '⛓️ Solana'],
     stats: { mcap: 'Market Cap', price: 'Price', volume: '24h Volume', holders: '24h Trades', liquidity: 'Liquidity', live: 'LIVE', chart: 'Live Price' },

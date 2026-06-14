@@ -1,4 +1,6 @@
 (function () {
+  console.log('Game Engine Fixed');
+
   const canvas = document.getElementById('gameCanvas');
   if (!canvas) return;
 
@@ -13,6 +15,8 @@
   const deathMsgEl = document.getElementById('deathMessage');
 
   const GROUND_Y = 320;
+  const LOGIC_W = 720;
+  const LOGIC_H = 420;
   const GRAVITY = 0.65;
   const JUMP_FORCE = -13;
   const BASE_SPEED = 5;
@@ -28,7 +32,10 @@
   }
 
   let flowerImg = new Image();
-  flowerImg.src = 'assets/logo.jpg';
+  let flowerImgReady = false;
+  flowerImg.onload = () => { flowerImgReady = true; };
+  flowerImg.onerror = () => { flowerImgReady = false; console.warn('flower img failed, using fallback circle'); };
+  flowerImg.src = 'assets/flower.png';
 
   let state = 'idle';
   let frame = 0;
@@ -49,7 +56,15 @@
   let autoMode = false;
   let autoLoops = 0;
 
-  const player = { x: 120, y: GROUND_Y, w: 52, h: 52, vy: 0, grounded: true, rotation: 0 };
+  const player = {
+    x: 120,
+    y: GROUND_Y,
+    w: 52,
+    h: 52,
+    vy: 0,
+    grounded: true,
+    rotation: 0
+  };
   let obstacles = [], collectibles = [], clouds = [], tears = [];
   let keys = {}; // for A/D left/right movement
 
@@ -89,6 +104,12 @@
     state = 'playing';
     overlay.classList.add('hidden');
     gameOverOverlay.classList.add('hidden');
+  }
+
+  function restartGame() {
+    // Full reset including AUTO mode on manual restart
+    if (autoMode) setAutoMode(false);
+    startGame();
   }
 
   function endGame() {
@@ -282,11 +303,18 @@
     ctx.save();
     ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
     ctx.rotate(player.rotation);
-    if (flowerImg.complete) {
+    if (flowerImgReady) {
       ctx.beginPath(); ctx.arc(0, 0, player.w / 2, 0, Math.PI * 2); ctx.clip();
       ctx.drawImage(flowerImg, -player.w / 2, -player.h / 2, player.w, player.h);
     } else {
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, player.w / 2, 0, Math.PI * 2); ctx.fill();
+      // Fallback: draw a simple flower emoji circle so character is always visible
+      ctx.fillStyle = '#c96f4a';
+      ctx.beginPath(); ctx.arc(0, 0, player.w / 2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = '28px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🌸', 0, 0);
     }
     ctx.restore();
 
@@ -366,21 +394,18 @@
 
   function handleResize() {
     const parent = canvas.parentElement;
+    if (!parent) return;
     const w = parent.clientWidth;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5); // crisp on retina, cap for perf
-    const aspect = canvas.width / canvas.height;
+    const aspect = LOGIC_W / LOGIC_H;
 
-    // Set display size
     canvas.style.width = w + 'px';
     canvas.style.height = (w / aspect) + 'px';
 
-    // Set internal resolution for sharpness
-    const targetW = Math.floor(w * dpr);
-    const targetH = Math.floor((w / aspect) * dpr);
-    if (canvas.width !== targetW || canvas.height !== targetH) {
-      canvas.width = targetW;
-      canvas.height = targetH;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // scale drawing operations
+    // Keep fixed logical resolution — scale via CSS only (prevents coordinate bugs)
+    if (canvas.width !== LOGIC_W || canvas.height !== LOGIC_H) {
+      canvas.width = LOGIC_W;
+      canvas.height = LOGIC_H;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
   }
 
@@ -403,8 +428,6 @@
       autoBtnEl.style.borderColor = autoMode ? '#4ecdc4' : '';
       autoBtnEl.style.color = autoMode ? '#4ecdc4' : '';
     }
-    // small console note for power users
-    if (autoMode) console.log('%c[MISANTHROPIC] AUTO INFINITE MODE active — PERFECT collection: catches every star + skips death. Run forever.', 'color:#4ecdc4');
   }
 
   let autoBtnEl = null;
@@ -459,19 +482,69 @@
   }
 
   startBtn?.addEventListener('click', startGame);
-  restartBtn?.addEventListener('click', startGame);
+  restartBtn?.addEventListener('click', restartGame);
+
+  // Mouse + touch jump
   canvas.addEventListener('click', () => { if (state === 'playing') jump(); });
+  canvas.addEventListener('touchstart', (e) => {
+    if (state === 'playing') {
+      e.preventDefault();
+      jump();
+    }
+  }, { passive: false });
+
   document.addEventListener('keydown', (e) => {
     keys[e.code] = true;
     if (state === 'playing') {
-      if ((e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW')) { 
-        e.preventDefault(); 
-        jump(); 
+      if ((e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW')) {
+        e.preventDefault();
+        jump();
       }
     }
   });
   document.addEventListener('keyup', (e) => {
     keys[e.code] = false;
+  });
+
+  // Mobile on-screen controls (touchstart/touchend for held movement)
+  const mobileControls = document.getElementById('gameMobileControls');
+  const touchKeys = { left: false, right: false };
+
+  function applyTouchKeys() {
+    keys['KeyA'] = touchKeys.left;
+    keys['ArrowLeft'] = touchKeys.left;
+    keys['KeyD'] = touchKeys.right;
+    keys['ArrowRight'] = touchKeys.right;
+  }
+
+  mobileControls?.querySelectorAll('.game-touch-btn').forEach((btn) => {
+    const action = btn.dataset.action;
+    const start = (e) => {
+      e.preventDefault();
+      if (action === 'jump') {
+        if (state === 'playing') jump();
+      } else if (action === 'left') {
+        touchKeys.left = true;
+        applyTouchKeys();
+      } else if (action === 'right') {
+        touchKeys.right = true;
+        applyTouchKeys();
+      }
+      btn.classList.add('active');
+    };
+    const end = (e) => {
+      e.preventDefault();
+      if (action === 'left') touchKeys.left = false;
+      if (action === 'right') touchKeys.right = false;
+      applyTouchKeys();
+      btn.classList.remove('active');
+    };
+    btn.addEventListener('touchstart', start, { passive: false });
+    btn.addEventListener('touchend', end, { passive: false });
+    btn.addEventListener('touchcancel', end, { passive: false });
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('mouseup', end);
+    btn.addEventListener('mouseleave', end);
   });
 
   window.addEventListener('resize', handleResize);
