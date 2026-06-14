@@ -49,7 +49,7 @@ const BUTTONS_EN = [
     emoji: '🔐',
     label: 'What is the CA?',
     responses: [
-      `CA: ${CA} - Copy it. I am a flower, not your financial advisor.`,
+      `CA:\n${CA}\nCopy it. I am a flower, not your financial advisor.`,
       'Safe? Is life safe? Nothing is. But the CA is real.',
       'Do not lose the CA. Losing humans is fine. Not the CA.',
     ],
