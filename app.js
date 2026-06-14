@@ -596,8 +596,72 @@ document.addEventListener('DOMContentLoaded', () => {
   const protoGame = document.getElementById('protoGame');
   const protoTerm = document.getElementById('protoTerm');
   const protoChat = document.getElementById('protoChat');
+  const protoScanner = document.getElementById('protoScanner');
   const headerTermBtn = document.getElementById('headerTermBtn');
   const headerChatBtn = document.getElementById('headerChatBtn');
+
+  // Trending coins mock data
+  const mockTrendingCoins = [
+    {
+      name: 'Misanthropic',
+      mcap: '$2.34M',
+      image: 'assets/flower.png'
+    },
+    {
+      name: 'Drooling Cat',
+      mcap: '$1.28M',
+      image: 'https://placehold.co/240x140/orange/white?text=🐱'
+    },
+    {
+      name: 'Kintara',
+      mcap: '$15.2M',
+      image: 'https://placehold.co/240x140/teal/white?text=🃏'
+    },
+    {
+      name: 'Bountywork',
+      mcap: '$593K',
+      image: 'https://placehold.co/240x140/green/white?text=💼'
+    },
+    {
+      name: 'Jotchua',
+      mcap: '$5.85M',
+      image: 'https://placehold.co/240x140/pink/white?text=🐕'
+    },
+    {
+      name: 'Three',
+      mcap: '$3.49M',
+      image: 'https://placehold.co/240x140/purple/white?text=3️⃣'
+    }
+  ];
+
+  function renderTrendingCoins() {
+    const track = document.getElementById('trendingTrack');
+    if (!track) return;
+    
+    track.innerHTML = mockTrendingCoins.map(coin => `
+      <div class="trending-card">
+        <img src="${coin.image}" alt="${coin.name}" class="trending-image" onerror="this.src='https://placehold.co/240x140/gray/white?text=🪙'">
+        <div class="trending-content">
+          <div class="trending-mcap">${coin.mcap}</div>
+          <div class="trending-name">${coin.name}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function toggleTrendingSection() {
+    const section = document.getElementById('trending');
+    if (!section) return;
+    
+    if (section.style.display === 'none') {
+      section.style.display = 'block';
+      renderTrendingCoins();
+      // Scroll to the section
+      section.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      section.style.display = 'none';
+    }
+  }
 
   let fullChatInitialized = false;
 
@@ -1359,6 +1423,35 @@ document.addEventListener('DOMContentLoaded', () => {
       if (headerTermBtn) headerTermBtn.style.display = '';
       if (headerChatBtn) headerChatBtn.style.display = '';
       showFullChat();
+    });
+  }
+  if (protoScanner) {
+    protoScanner.addEventListener('click', () => {
+      if (intro) intro.style.display = 'none';
+      document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
+      if (headerTermBtn) headerTermBtn.style.display = '';
+      if (headerChatBtn) headerChatBtn.style.display = '';
+      toggleTrendingSection();
+    });
+  }
+
+  // Trending navigation buttons
+  const trendingPrev = document.getElementById('trendingPrev');
+  const trendingNext = document.getElementById('trendingNext');
+  if (trendingPrev) {
+    trendingPrev.addEventListener('click', () => {
+      const track = document.getElementById('trendingTrack');
+      if (track) {
+        track.scrollBy({ left: -280, behavior: 'smooth' });
+      }
+    });
+  }
+  if (trendingNext) {
+    trendingNext.addEventListener('click', () => {
+      const track = document.getElementById('trendingTrack');
+      if (track) {
+        track.scrollBy({ left: 280, behavior: 'smooth' });
+      }
     });
   }
 
