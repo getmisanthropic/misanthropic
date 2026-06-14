@@ -605,6 +605,24 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentCoins = [];
 
   async function fetchTrendingCoins() {
+    // Check if we're running locally (localhost or 127.0.0.1)
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    if (isLocal) {
+      console.log('Running locally, using mock trending coins');
+      currentCoins = [
+        { name: 'Misanthropic', symbol: 'MIS', mint: 'AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG', image_uri: 'assets/flower.png', usd_market_cap: 2340000 },
+        { name: 'Drooling Cat', symbol: 'DRCAT', mint: '79H4C1V3L1C8T5P8Y9M3Z2K1Q4W7E8R9T0Y', image_uri: 'https://placehold.co/240x140/orange/white?text=🐱', usd_market_cap: 1280000 },
+        { name: 'Kintara', symbol: 'KINT', mint: 'K1NT4R4C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/teal/white?text=🃏', usd_market_cap: 15200000 },
+        { name: 'Bountywork', symbol: 'BOUNTY', mint: 'B0UNTYW0RKC01N4DDR3SS12345', image_uri: 'https://placehold.co/240x140/green/white?text=💼', usd_market_cap: 593000 },
+        { name: 'Jotchua', symbol: 'JOT', mint: 'J0TCHU4C01N4DDR3SS12345678', image_uri: 'https://placehold.co/240x140/pink/white?text=🐕', usd_market_cap: 5850000 },
+        { name: 'Three', symbol: 'THREE', mint: 'THR33C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/purple/white?text=3️⃣', usd_market_cap: 3490000 }
+      ];
+      renderTrendingCoinsToElement('trendingMainTrack');
+      renderTrendingCoinsToElement('trendingScannerTrack');
+      return;
+    }
+
     try {
       console.log('Fetching trending coins from Netlify proxy...');
       
