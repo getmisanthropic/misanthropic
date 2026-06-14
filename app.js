@@ -605,79 +605,22 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentCoins = [];
 
   async function fetchTrendingCoins() {
-    // Check if we're running locally (localhost or 127.0.0.1)
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    console.log('fetchTrendingCoins called, location:', window.location.hostname);
     
-    if (isLocal) {
-      console.log('Running locally, using mock trending coins');
-      currentCoins = [
-        { name: 'Misanthropic', symbol: 'MIS', mint: 'AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG', image_uri: 'assets/flower.png', usd_market_cap: 2340000 },
-        { name: 'Drooling Cat', symbol: 'DRCAT', mint: '79H4C1V3L1C8T5P8Y9M3Z2K1Q4W7E8R9T0Y', image_uri: 'https://placehold.co/240x140/orange/white?text=🐱', usd_market_cap: 1280000 },
-        { name: 'Kintara', symbol: 'KINT', mint: 'K1NT4R4C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/teal/white?text=🃏', usd_market_cap: 15200000 },
-        { name: 'Bountywork', symbol: 'BOUNTY', mint: 'B0UNTYW0RKC01N4DDR3SS12345', image_uri: 'https://placehold.co/240x140/green/white?text=💼', usd_market_cap: 593000 },
-        { name: 'Jotchua', symbol: 'JOT', mint: 'J0TCHU4C01N4DDR3SS12345678', image_uri: 'https://placehold.co/240x140/pink/white?text=🐕', usd_market_cap: 5850000 },
-        { name: 'Three', symbol: 'THREE', mint: 'THR33C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/purple/white?text=3️⃣', usd_market_cap: 3490000 }
-      ];
-      renderTrendingCoinsToElement('trendingMainTrack');
-      renderTrendingCoinsToElement('trendingScannerTrack');
-      return;
-    }
-
-    try {
-      console.log('Fetching trending coins from Netlify proxy...');
-      
-      // Use our Netlify proxy function to avoid CORS/Cloudflare issues
-      const response = await fetch('/.netlify/functions/trending');
-      
-      if (!response.ok) {
-        console.error('Failed to fetch trending coins, status:', response.status);
-        throw new Error('Failed to fetch trending coins');
-      }
-      
-      const coins = await response.json();
-      console.log('Trending coins data from proxy:', coins);
-      
-      // Process the coins - make sure we have the right data structure
-      let processedCoins = [];
-      if (Array.isArray(coins)) {
-        processedCoins = coins;
-      } else if (coins.data && Array.isArray(coins.data)) {
-        processedCoins = coins.data;
-      } else if (coins.coins && Array.isArray(coins.coins)) {
-        processedCoins = coins.coins;
-      }
-      
-      currentCoins = processedCoins.slice(0, 20).map(coin => ({
-        name: coin.name || coin.title || 'Unknown',
-        symbol: coin.symbol || coin.ticker || '',
-        mint: coin.mint || coin.address || coin.tokenAddress || '',
-        image_uri: coin.image_uri || coin.image || coin.img || 'https://placehold.co/240x140/gray/white?text=🪙',
-        usd_market_cap: coin.usd_market_cap || coin.marketCap || coin.mcap || 0,
-        priceUsd: coin.priceUsd || coin.price || 0,
-        volume24h: coin.volume || coin.volume24h || 0
-      }));
-      
-      console.log('Processed coins:', currentCoins);
-      
-      // Render to both sections if they exist
-      renderTrendingCoinsToElement('trendingMainTrack');
-      renderTrendingCoinsToElement('trendingScannerTrack');
-      
-    } catch (error) {
-      console.error('Error fetching trending coins:', error);
-      // Fallback to mock data
-      currentCoins = [
-        { name: 'Misanthropic', symbol: 'MIS', mint: 'AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG', image_uri: 'assets/flower.png', usd_market_cap: 2340000 },
-        { name: 'Drooling Cat', symbol: 'DRCAT', mint: '79H4C1V3L1C8T5P8Y9M3Z2K1Q4W7E8R9T0Y', image_uri: 'https://placehold.co/240x140/orange/white?text=🐱', usd_market_cap: 1280000 },
-        { name: 'Kintara', symbol: 'KINT', mint: 'K1NT4R4C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/teal/white?text=🃏', usd_market_cap: 15200000 },
-        { name: 'Bountywork', symbol: 'BOUNTY', mint: 'B0UNTYW0RKC01N4DDR3SS12345', image_uri: 'https://placehold.co/240x140/green/white?text=💼', usd_market_cap: 593000 },
-        { name: 'Jotchua', symbol: 'JOT', mint: 'J0TCHU4C01N4DDR3SS12345678', image_uri: 'https://placehold.co/240x140/pink/white?text=🐕', usd_market_cap: 5850000 },
-        { name: 'Three', symbol: 'THREE', mint: 'THR33C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/purple/white?text=3️⃣', usd_market_cap: 3490000 }
-      ];
-      
-      renderTrendingCoinsToElement('trendingMainTrack');
-      renderTrendingCoinsToElement('trendingScannerTrack');
-    }
+    // Use mock data for now (local and production)
+    currentCoins = [
+      { name: 'Misanthropic', symbol: 'MIS', mint: 'AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG', image_uri: 'assets/flower.png', usd_market_cap: 2340000 },
+      { name: 'Drooling Cat', symbol: 'DRCAT', mint: '79H4C1V3L1C8T5P8Y9M3Z2K1Q4W7E8R9T0Y', image_uri: 'https://placehold.co/240x140/orange/white?text=🐱', usd_market_cap: 1280000 },
+      { name: 'Kintara', symbol: 'KINT', mint: 'K1NT4R4C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/teal/white?text=🃏', usd_market_cap: 15200000 },
+      { name: 'Bountywork', symbol: 'BOUNTY', mint: 'B0UNTYW0RKC01N4DDR3SS12345', image_uri: 'https://placehold.co/240x140/green/white?text=💼', usd_market_cap: 593000 },
+      { name: 'Jotchua', symbol: 'JOT', mint: 'J0TCHU4C01N4DDR3SS12345678', image_uri: 'https://placehold.co/240x140/pink/white?text=🐕', usd_market_cap: 5850000 },
+      { name: 'Three', symbol: 'THREE', mint: 'THR33C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/purple/white?text=3️⃣', usd_market_cap: 3490000 }
+    ];
+    
+    console.log('About to render to trendingMainTrack and trendingScannerTrack');
+    
+    renderTrendingCoinsToElement('trendingMainTrack');
+    renderTrendingCoinsToElement('trendingScannerTrack');
   }
 
   function renderTrendingCoinsToElement(elementId) {
