@@ -729,10 +729,48 @@ h2 { font-family: var(--font-serif); font-size: clamp(1.95rem, 4.1vw, 2.75rem); 
 .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 .reveal.visible { opacity: 1; transform: translateY(0); }
 
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9996;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255,248,243,0.08), transparent 32%),
+    linear-gradient(180deg, rgba(12, 8, 7, 0.16), rgba(12, 8, 7, 0.3));
+  backdrop-filter: blur(0px);
+  transition: opacity 0.34s ease, backdrop-filter 0.34s ease;
+}
+
+body.nav-transitioning::after {
+  opacity: 1;
+  backdrop-filter: blur(8px);
+}
+
+.nav-target-focus {
+  animation: navTargetReveal 0.62s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes navTargetReveal {
+  0% {
+    opacity: 0.28;
+    transform: translateY(22px) scale(0.985);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .reveal.visible { opacity: 1; transform: none; }
+  body::after { display: none; }
+  .nav-target-focus { animation: none; }
   .hero-flower, .preloader-logo, .live-dot, .ticker-track, .intro-tear, .chat-fab-pulse { animation: none !important; }
   .btn, .link-card, .stat-card, .protocol-card, .howto-card, .token-card, .roadmap-item, .lore-card { transition: none !important; }
 }

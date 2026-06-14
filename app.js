@@ -658,6 +658,83 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function ensureMainChrome() {
+    document.querySelectorAll('.chat-fab, .back-top').forEach((el) => {
+      el.style.display = '';
+    });
+    if (headerTermBtn) headerTermBtn.style.display = '';
+    if (headerChatBtn) headerChatBtn.style.display = '';
+  }
+
+  function isIntroVisible() {
+    return !!intro && intro.style.display !== 'none';
+  }
+
+  function jumpToSection(target) {
+    if (!target) return;
+    const header = document.getElementById('header');
+    const headerOffset = (header?.getBoundingClientRect().height || 68) + 28;
+    const top = Math.max(0, window.scrollY + target.getBoundingClientRect().top - headerOffset);
+    const root = document.documentElement;
+    const previousBehavior = root.style.scrollBehavior;
+
+    root.style.scrollBehavior = 'auto';
+    window.scrollTo({ top, behavior: 'auto' });
+    root.style.scrollBehavior = previousBehavior;
+
+    target.classList.add('visible');
+    target.classList.remove('nav-target-focus');
+    void target.offsetWidth;
+    target.classList.add('nav-target-focus');
+    window.setTimeout(() => target.classList.remove('nav-target-focus'), 720);
+  }
+
+  function navigateToMainSection(sectionId) {
+    const target = document.getElementById(sectionId);
+    if (!target) return;
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const openFromIntro = isIntroVisible();
+
+    hideTerminal();
+    hideFullChat();
+    ensureMainChrome();
+
+    const runTransition = () => {
+      if (prefersReduced) {
+        jumpToSection(target);
+        return;
+      }
+
+      document.body.classList.add('nav-transitioning');
+      window.setTimeout(() => {
+        jumpToSection(target);
+        window.setTimeout(() => {
+          document.body.classList.remove('nav-transitioning');
+        }, 260);
+      }, 160);
+    };
+
+    if (openFromIntro) {
+      hideIntro();
+      window.setTimeout(runTransition, 270);
+      return;
+    }
+
+    runTransition();
+  }
+
+  function openChatExperience() {
+    hideTerminal();
+    ensureMainChrome();
+    if (isIntroVisible()) {
+      hideIntro();
+      window.setTimeout(() => showFullChat(), 270);
+      return;
+    }
+    showFullChat();
+  }
+
   function showTerminal() {
     if (intro) intro.style.display = 'none';
     if (termView) termView.classList.remove('hidden');
@@ -1284,6 +1361,27 @@ document.addEventListener('DOMContentLoaded', () => {
       showFullChat();
     });
   }
+
+  document.querySelectorAll('.nav a[href^="#"]').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      const href = link.getAttribute('href');
+      if (!href || !href.startsWith('#')) return;
+
+      if (href === '#chat') {
+        e.preventDefault();
+        openChatExperience();
+        return;
+      }
+
+      const sectionId = href.slice(1);
+      if (!sectionId) return;
+      const target = document.getElementById(sectionId);
+      if (!target) return;
+
+      e.preventDefault();
+      navigateToMainSection(sectionId);
+    });
+  });
 
   // Keyboard shortcut: press ` or ~ from main page to open terminal quickly
   document.addEventListener('keydown', (e) => {
