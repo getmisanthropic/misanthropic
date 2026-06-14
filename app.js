@@ -600,53 +600,75 @@ document.addEventListener('DOMContentLoaded', () => {
   const headerTermBtn = document.getElementById('headerTermBtn');
   const headerChatBtn = document.getElementById('headerChatBtn');
 
-  // Trending coins mock data
-  const mockTrendingCoins = [
-    {
-      name: 'Misanthropic',
-      mcap: '$2.34M',
-      image: 'assets/flower.png'
-    },
-    {
-      name: 'Drooling Cat',
-      mcap: '$1.28M',
-      image: 'https://placehold.co/240x140/orange/white?text=🐱'
-    },
-    {
-      name: 'Kintara',
-      mcap: '$15.2M',
-      image: 'https://placehold.co/240x140/teal/white?text=🃏'
-    },
-    {
-      name: 'Bountywork',
-      mcap: '$593K',
-      image: 'https://placehold.co/240x140/green/white?text=💼'
-    },
-    {
-      name: 'Jotchua',
-      mcap: '$5.85M',
-      image: 'https://placehold.co/240x140/pink/white?text=🐕'
-    },
-    {
-      name: 'Three',
-      mcap: '$3.49M',
-      image: 'https://placehold.co/240x140/purple/white?text=3️⃣'
-    }
-  ];
-
-  function renderTrendingCoins() {
+  // Trending coins - fetch from pump.fun API
+  async function fetchTrendingCoins() {
     const track = document.getElementById('trendingTrack');
     if (!track) return;
     
-    track.innerHTML = mockTrendingCoins.map(coin => `
-      <div class="trending-card">
-        <img src="${coin.image}" alt="${coin.name}" class="trending-image" onerror="this.src='https://placehold.co/240x140/gray/white?text=🪙'">
-        <div class="trending-content">
-          <div class="trending-mcap">${coin.mcap}</div>
-          <div class="trending-name">${coin.name}</div>
-        </div>
-      </div>
-    `).join('');
+    try {
+      // Fetch trending coins from pump.fun API
+      const response = await fetch('https://frontend-api.pump.fun/coins/trending');
+      if (!response.ok) throw new Error('Failed to fetch trending coins');
+      
+      const coins = await response.json();
+      
+      // Render the coins
+      track.innerHTML = coins.map(coin => {
+        const marketCap = coin.usd_market_cap 
+          ? (coin.usd_market_cap >= 1e6 
+              ? `$${(coin.usd_market_cap / 1e6).toFixed(2)}M` 
+              : (coin.usd_market_cap >= 1e3 
+                  ? `$${(coin.usd_market_cap / 1e3).toFixed(1)}K` 
+                  : `$${coin.usd_market_cap.toFixed(0)}`))
+          : '—';
+        
+        return `
+          <div class="trending-card" style="cursor: pointer;" onclick="window.open('https://pump.fun/${coin.mint}', '_blank')">
+            <img src="${coin.image_uri || 'https://placehold.co/240x140/gray/white?text=🪙'}" alt="${coin.name}" class="trending-image" onerror="this.src='https://placehold.co/240x140/gray/white?text=🪙'">
+            <div class="trending-content">
+              <div class="trending-mcap">${marketCap}</div>
+              <div class="trending-name">${coin.name} ${coin.symbol ? `($${coin.symbol})` : ''}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+    } catch (error) {
+      console.error('Error fetching trending coins:', error);
+      // Fallback to mock data
+      const mockTrendingCoins = [
+        { name: 'Misanthropic', mint: 'AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG', image_uri: 'assets/flower.png', usd_market_cap: 2340000 },
+        { name: 'Drooling Cat', mint: '79H4C1V3L1C8T5P8Y9M3Z2K1Q4W7E8R9T0Y', image_uri: 'https://placehold.co/240x140/orange/white?text=🐱', usd_market_cap: 1280000 },
+        { name: 'Kintara', mint: 'K1NT4R4C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/teal/white?text=🃏', usd_market_cap: 15200000 },
+        { name: 'Bountywork', mint: 'B0UNTYW0RKC01N4DDR3SS12345', image_uri: 'https://placehold.co/240x140/green/white?text=💼', usd_market_cap: 593000 },
+        { name: 'Jotchua', mint: 'J0TCHU4C01N4DDR3SS12345678', image_uri: 'https://placehold.co/240x140/pink/white?text=🐕', usd_market_cap: 5850000 },
+        { name: 'Three', mint: 'THR33C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/purple/white?text=3️⃣', usd_market_cap: 3490000 }
+      ];
+      
+      track.innerHTML = mockTrendingCoins.map(coin => {
+        const marketCap = coin.usd_market_cap 
+          ? (coin.usd_market_cap >= 1e6 
+              ? `$${(coin.usd_market_cap / 1e6).toFixed(2)}M` 
+              : (coin.usd_market_cap >= 1e3 
+                  ? `$${(coin.usd_market_cap / 1e3).toFixed(1)}K` 
+                  : `$${coin.usd_market_cap.toFixed(0)}`))
+          : '—';
+        
+        return `
+          <div class="trending-card" style="cursor: pointer;" onclick="window.open('https://pump.fun/${coin.mint}', '_blank')">
+            <img src="${coin.image_uri}" alt="${coin.name}" class="trending-image" onerror="this.src='https://placehold.co/240x140/gray/white?text=🪙'">
+            <div class="trending-content">
+              <div class="trending-mcap">${marketCap}</div>
+              <div class="trending-name">${coin.name}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  function renderTrendingCoins() {
+    fetchTrendingCoins();
   }
 
   function toggleTrendingSection() {
