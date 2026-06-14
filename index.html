@@ -31,7 +31,7 @@
   <!-- HEADER -->
   <header id="header" class="header">
     <div class="header-inner">
-      <a href="#" class="brand">
+      <a href="#intro" class="brand">
         <img src="assets/flower.png" alt="Misanthropic logo" width="38" height="38" class="brand-logo">
         <span>MISANTHROPIC</span>
       </a>
@@ -71,30 +71,34 @@
         <div class="intro-tear"></div>
       </div>
       <div class="intro-tag" data-i18n="hero.badge">SOLANA • PUMP.FUN • ELON-CERTIFIED IRONY</div>
+      <div class="hero-micro-live" aria-label="Site live status">
+        <span class="hero-micro-live-dot" aria-hidden="true"></span>
+        <span>NOW LIVE ON V2</span>
+      </div>
       <h1 class="intro-title" data-i18n="hero.title">MISANTHROPIC</h1>
       <p class="intro-sub" data-i18n="hero.tagline">Crying flower. Miserable coin. Happy holders. Escaping humanity has never been this profitable.</p>
 
       <div class="intro-choices">
         <button id="enterMain" class="choice-card">
           <div class="choice-icon">🌸</div>
-          <div class="choice-head">ENTER MAIN PAGE</div>
-          <div class="choice-desc">Full site, game, stats, quiz.</div>
-          <div class="choice-action">CONTINUE →</div>
+          <div class="choice-head" data-i18n="ui.enterMainHead">ENTER MAIN PAGE</div>
+          <div class="choice-desc" data-i18n="ui.enterMainDesc">Full site, game, stats, quiz.</div>
+          <div class="choice-action" data-i18n="ui.enterMainAction">CONTINUE →</div>
         </button>
-        <div class="choice-card terminal-card" style="opacity:0.55;position:relative;">
-          <div style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:4px;font-size:9px;letter-spacing:1.5px;opacity:0.55;text-transform:uppercase;">COMING SOON</div>
+        <button id="enterTerminal" class="choice-card terminal-card" style="opacity:0.55;position:relative;">
+          <div style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:4px;font-size:9px;letter-spacing:1.5px;opacity:0.55;text-transform:uppercase;" data-i18n="ui.terminalSoon">COMING SOON</div>
           <div class="choice-icon">💻</div>
-          <div class="choice-head">TERMINAL</div>
-          <div class="choice-desc">flowerOS. Commands. Pure misanthropy.</div>
-        </div>
+          <div class="choice-head" data-i18n="ui.terminalHead">TERMINAL</div>
+          <div class="choice-desc" data-i18n="ui.terminalDesc">flowerOS. Commands. Pure misanthropy.</div>
+        </button>
         <button id="enterChat" class="choice-card">
           <div class="choice-icon">🗣️</div>
-          <div class="choice-head" data-i18n="nav.chat">TALK TO FLOWER</div>
-          <div class="choice-desc">Regretful AI. Zero small talk. Full chat mode.</div>
-          <div class="choice-action">REGRET EVERYTHING →</div>
+          <div class="choice-head" data-i18n="ui.chatHead">TALK TO FLOWER</div>
+          <div class="choice-desc" data-i18n="ui.chatDesc">Regretful AI. Zero small talk. Full chat mode.</div>
+          <div class="choice-action" data-i18n="ui.chatAction">REGRET EVERYTHING →</div>
         </button>
       </div>
-      <p class="intro-foot">Three protocols. Zero humans. Pick your misery.</p>
+      <p class="intro-foot" data-i18n="ui.introFoot">Three protocols. Zero humans. Pick your misery.</p>
     </div>
   </section>
 
@@ -106,19 +110,19 @@
       <div class="protocols-grid">
         <button id="protoGame" class="protocol-card game-proto">
           <div class="proto-icon">🌸</div>
-          <div class="proto-head" data-i18n="nav.game">MISANTHROPIC RUN</div>
-          <div class="proto-desc">Dodge humans. Collect every star. AUTO mode is god-tier.</div>
+          <div class="proto-head" data-i18n="ui.protoGameHead">MISANTHROPIC RUN</div>
+          <div class="proto-desc" data-i18n="ui.protoGameDesc">Dodge humans. Collect every star. AUTO mode is god-tier.</div>
         </button>
-        <div class="protocol-card term-proto" style="opacity:0.55;position:relative;">
-          <div style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:4px;font-size:9px;letter-spacing:1.5px;opacity:0.55;text-transform:uppercase;">COMING SOON</div>
+        <button id="protoTerm" class="protocol-card term-proto" style="opacity:0.55;position:relative;">
+          <div style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:4px;font-size:9px;letter-spacing:1.5px;opacity:0.55;text-transform:uppercase;" data-i18n="ui.terminalSoon">COMING SOON</div>
           <div class="proto-icon">💻</div>
-          <div class="proto-head">TERMINAL</div>
-          <div class="proto-desc">flowerOS. Commands. Pure misanthropy.</div>
-        </div>
+          <div class="proto-head" data-i18n="ui.terminalHead">TERMINAL</div>
+          <div class="proto-desc" data-i18n="ui.terminalDesc">flowerOS. Commands. Pure misanthropy.</div>
+        </button>
         <button id="protoChat" class="protocol-card chat-proto">
           <div class="proto-icon">🗣️</div>
-          <div class="proto-head" data-i18n="nav.chat">CRYING FLOWER CHAT</div>
-          <div class="proto-desc">Regretful AI. Zero small talk.</div>
+          <div class="proto-head" data-i18n="ui.protoChatHead">CRYING FLOWER CHAT</div>
+          <div class="proto-desc" data-i18n="ui.protoChatDesc">Regretful AI. Zero small talk.</div>
         </button>
       </div>
     </div>
@@ -134,6 +138,10 @@
 
     <div class="container hero-content">
       <div class="hero-badge" data-i18n="hero.badge">Solana · pump.fun · Elon-certified irony</div>
+      <div class="hero-micro-live" aria-label="Site live status">
+        <span class="hero-micro-live-dot" aria-hidden="true"></span>
+        <span>NOW LIVE ON V2</span>
+      </div>
       <h1 class="hero-title" data-i18n="hero.title">Misanthropic</h1>
       <p class="hero-tagline" data-i18n="hero.tagline">Crying flower. Miserable coin. Happy holders. Escaping humanity has never been this profitable.</p>
 
@@ -143,8 +151,8 @@
       </figure>
 
       <div class="hero-actions">
-        <button id="copyCaHero" class="btn btn-copy">📋 Copy CA</button>
-        <a href="#game" class="btn btn-primary">🎮 Play Game</a>
+        <button id="copyCaHero" class="btn btn-copy" data-i18n="hero.copyCa">📋 Copy CA</button>
+        <a href="#game" class="btn btn-primary" data-i18n="hero.playGame">🎮 Play Game</a>
         <!-- Direct X profile link (replaces broken Share on X button) -->
         <a href="https://x.com/getmisanthropic" class="x-profile-pill" target="_blank" rel="noopener noreferrer" aria-label="Follow @getmisanthropic on X">
           <svg class="x-profile-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -159,11 +167,6 @@
       <span class="hero-scroll-chevron" aria-hidden="true"></span>
     </a>
   </section>
-
-  <!-- TICKER -->
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker-track"></div>
-  </div>
 
   <!-- LIVE STATS -->
   <section class="stats-section reveal">
@@ -243,13 +246,13 @@
       </div>
 
       <div id="buttonGrid" class="button-grid" aria-label="Misanthropic quiz buttons"></div>
-      <div id="gameHints" class="game-controls-hint"></div>
     </div>
   </section>
 
   <!-- GAME -->
   <section id="game" class="game-section reveal">
     <div class="container">
+      <div id="gameHints" class="game-controls-hint game-controls-hint-inline"></div>
       <div class="game-header">
         <div>
           <h2 data-i18n="game.title">MISANTHROPIC RUN</h2>
@@ -428,24 +431,19 @@
     </div>
   </footer>
 
-  <!-- Back to top -->
-  <button id="backTop" class="back-top" aria-label="Back to top">↑</button>
-
-
-
   <!-- Full immersive Terminal view (legacy) -->
   <div id="terminalView" class="terminal-view hidden">
     <div class="terminal-bar">
       <div class="terminal-title">flowerOS 0.6.9 — MISANTHROPIC PROTOCOL</div>
       <div class="terminal-actions">
-        <button id="termToMain">MAIN PAGE</button>
-        <button id="termExit">EXIT</button>
+        <button id="termToMain" class="terminal-nav-btn" data-i18n="ui.terminalMain">MAIN PAGE</button>
+        <button id="termExit" class="terminal-nav-btn" data-i18n="ui.terminalExit">EXIT</button>
       </div>
     </div>
     <div id="terminalOutput" class="terminal-output"></div>
     <div class="terminal-input-row">
       <span class="prompt">&gt;</span>
-      <input id="terminalInput" type="text" placeholder="type help or run" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <input id="terminalInput" type="text" data-i18n-placeholder="ui.terminalPlaceholder" placeholder="type help or run" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <!-- Mobile terminal command chips -->
     <div id="terminalChips" class="terminal-chips" aria-label="Suggested terminal commands">
@@ -462,21 +460,21 @@
       <div class="chat-view-left">
         <img src="assets/flower.png" class="chat-view-avatar" alt="Crying flower avatar" width="38" height="38">
         <div>
-          <strong>Crying Flower</strong>
-          <div style="font-size:11px;opacity:0.6">Always regretting this</div>
+          <strong data-i18n="ui.fullChatTitle">Crying Flower</strong>
+          <div style="font-size:11px;opacity:0.6" data-i18n="ui.fullChatSub">Always regretting this</div>
         </div>
       </div>
       <div class="chat-view-actions">
-        <button id="fullChatNew">NEW</button>
-        <button id="chatToTerminal">TERMINAL</button>
-        <button id="chatToMain">MAIN</button>
-        <button id="chatExit">CLOSE</button>
+        <button id="fullChatNew" data-i18n="ui.fullChatNew">NEW</button>
+        <button id="chatToTerminal" data-i18n="ui.fullChatTerminal">TERMINAL</button>
+        <button id="chatToMain" data-i18n="ui.fullChatMain">MAIN</button>
+        <button id="chatExit" data-i18n="ui.fullChatClose">CLOSE</button>
       </div>
     </div>
     <div id="fullChatMessages" class="chat-view-messages"></div>
     <div class="chat-view-input">
-      <input id="fullChatInput" type="text" placeholder="Message the flower...">
-      <button id="fullChatSend">Send</button>
+      <input id="fullChatInput" type="text" data-i18n-placeholder="ui.fullChatPlaceholder" placeholder="Message the flower...">
+      <button id="fullChatSend" data-i18n="chat.send">Send</button>
     </div>
     <div id="fullChatSuggestions" class="full-chat-suggestions"></div>
   </div>

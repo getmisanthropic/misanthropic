@@ -14,22 +14,43 @@ function fmtNum(n) {
   return n.toLocaleString('en-US');
 }
 
-function copyCA(sourceBtn) {
-  navigator.clipboard.writeText(CA).then(() => {
-    const toast = document.getElementById('copyToast');
+async function copyCA(sourceBtn) {
+  const originalHtml = sourceBtn ? sourceBtn.innerHTML : '';
+  const toast = document.getElementById('copyToast');
+
+  try {
+    await navigator.clipboard.writeText(CA);
+  } catch (error) {
+    const textArea = document.createElement('textarea');
+    textArea.value = CA;
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+  }
+
+  if (toast) {
     toast.textContent = I18n.t('ca.toast');
-    setTimeout(() => { toast.textContent = ''; }, 3500);
-    fireConfetti();
-    if (sourceBtn) {
-      const orig = sourceBtn.textContent;
-      sourceBtn.textContent = I18n.t('ca.copied');
-      sourceBtn.classList.add('copied');
-      setTimeout(() => {
-        sourceBtn.textContent = orig;
-        sourceBtn.classList.remove('copied');
-      }, 2000);
-    }
-  });
+    setTimeout(() => {
+      toast.textContent = '';
+    }, 3500);
+  }
+
+  fireConfetti();
+
+  if (sourceBtn) {
+    sourceBtn.innerHTML = I18n.t('ca.copied');
+    sourceBtn.classList.add('copied');
+    sourceBtn.style.background = '#4a7c59';
+    setTimeout(() => {
+      sourceBtn.innerHTML = originalHtml;
+      sourceBtn.classList.remove('copied');
+      sourceBtn.style.background = '';
+    }, 2000);
+  }
 }
 
 function initCopyButtons() {
@@ -40,17 +61,22 @@ function initCopyButtons() {
 function initLangPicker() {
   const menu = document.getElementById('langMenu');
   const btn = document.getElementById('langCurrent');
-  const picker = document.getElementById('langPicker');
+  const picker = document.querySelector('.lang-picker');
+  const dropdown = document.getElementById('langPicker');
+  if (!menu || !btn || !picker || !dropdown) return;
+
+  menu.innerHTML = '';
 
   LANGS.forEach((lang) => {
     const opt = document.createElement('button');
     opt.className = 'lang-option' + (lang.code === I18n.lang ? ' active' : '');
     opt.dataset.lang = lang.code;
-    opt.innerHTML = `${lang.flag} ${lang.name}`;
+    opt.innerHTML = `${lang.flag} ${lang.nativeName || lang.name}`;
     opt.addEventListener('click', () => {
-      I18n.setLang(lang.code);
+      I18n.setLanguage(lang.code);
       menu.querySelectorAll('.lang-option').forEach((o) => o.classList.toggle('active', o.dataset.lang === lang.code));
       picker.classList.remove('open');
+      dropdown.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
       rebuildFunnyButtons();
       rebuildGameHints();
@@ -61,11 +87,13 @@ function initLangPicker() {
   btn?.addEventListener('click', (e) => {
     e.stopPropagation();
     picker.classList.toggle('open');
-    btn.setAttribute('aria-expanded', picker.classList.contains('open'));
+    dropdown.classList.toggle('open');
+    btn.setAttribute('aria-expanded', dropdown.classList.contains('open'));
   });
 
   document.addEventListener('click', () => {
-    picker?.classList.remove('open');
+    picker.classList.remove('open');
+    dropdown.classList.remove('open');
     btn?.setAttribute('aria-expanded', 'false');
   });
 }
@@ -364,71 +392,174 @@ window.addEventListener('langchange', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-  // === NUCLEAR FIX: prevent blank page at all costs ===
-  // Run this FIRST so even if later code errors, content shows and preloader dies.
-  function forceShowAll() {
-    try {
-      const pre = document.getElementById('preloader');
-      if (pre) {
-        pre.classList.add('done');
-        if (pre.parentNode) pre.parentNode.removeChild(pre);
-      }
-      document.body.classList.remove('preload');
-    } catch (e) {}
-  }
-
-  forceShowAll();           // immediate
-  setTimeout(forceShowAll, 80);
-  setTimeout(forceShowAll, 250);
-  setTimeout(forceShowAll, 600);
-
-  // Robust live polling for Live Stats cards: must update continuously while the page/tab is open (no reload required).
-  // We use an immediate call + 5s interval. Timestamp always refreshes on success so you can SEE it's live.
-  function startLiveStatsPolling() {
-    // First call right away (site just opened)
-    try { fetchLiveStats(); } catch (e) { /* initial fetch */ }
-
-    if (window.__liveStatsInterval) {
-      clearInterval(window.__liveStatsInterval);
+    // === NUCLEAR FIX: prevent blank page at all costs ===
+    // Run this FIRST so even if later code errors, content shows and preloader dies.
+    function forceShowAll() {
+      try {
+        const pre = document.getElementById('preloader');
+        if (pre) {
+          pre.classList.add('done');
+          if (pre.parentNode) pre.parentNode.removeChild(pre);
+        }
+        document.body.classList.remove('preload');
+      } catch (e) {}
     }
-    window.__liveStatsInterval = setInterval(() => {
-      try { fetchLiveStats(); } catch (e) { /* poll retry */ }
-    }, 5000);
+
+    forceShowAll();           // immediate
+    setTimeout(forceShowAll, 80);
+    setTimeout(forceShowAll, 250);
+    setTimeout(forceShowAll, 600);
+
+    // Robust live polling for Live Stats cards: must update continuously while the page/tab is open (no reload required).
+    // We use an immediate call + 5s interval. Timestamp always refreshes on success so you can SEE it's live.
+    function startLiveStatsPolling() {
+      // First call right away (site just opened)
+      try { fetchLiveStats(); } catch (e) { /* initial fetch */ }
+
+      if (window.__liveStatsInterval) {
+        clearInterval(window.__liveStatsInterval);
+      }
+      window.__liveStatsInterval = setInterval(() => {
+        try { fetchLiveStats(); } catch (e) { /* poll retry */ }
+      }, 5000);
+    }
+
+    // Start polling VERY early so cards update live even before other inits finish
+    startLiveStatsPolling();
+
+    // Extra safety fetch a bit later (in case of any transient network blip on first load)
+    setTimeout(() => { try { fetchLiveStats(); } catch(e){} }, 800);
+
+    I18n.setLang(I18n.lang);
+    initLangPicker();
+    initCopyButtons();
+    initFunnyButtons();
+    initCursorGlow();
+    initParticles();
+    initHeroParticles();
+    initScrollReveal();
+    initHeader();
+    initMobileMenu();
+    rebuildGameHints();
+    initFlowerClick();
+    initHeroFlowerClick();
+
+    // One last belt-and-suspenders after everything
+    setTimeout(forceShowAll, 1200);
+
+
+  });
+
+// Flower click animation and tooltip
+  function initFlowerClick() {
+    const flowerElement = document.getElementById('mascotImg');
+    if (!flowerElement) return;
+
+    flowerElement.addEventListener('click', function() {
+      // Add crying animation class
+      this.classList.add('crying');
+      
+      // Show a random misanthropic message.
+      const messages = [
+        "Please stop clicking me.",
+        "Every click drains my will to exist.",
+        "Oh great. Another human.",
+        "I regret having a clickable surface.",
+        "This brings me zero joy.",
+        "Are you done yet? I'm exhausted.",
+      ];
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+      showFlowerTooltip(msg);
+      
+      // Remove the animation after 1.5 seconds.
+      setTimeout(() => {
+        this.classList.remove('crying');
+      }, 1500);
+    });
   }
 
-  // Start polling VERY early so cards update live even before other inits finish
-  startLiveStatsPolling();
+  function showFlowerTooltip(text) {
+    const speechText = document.getElementById('speechText');
+    const speechBubble = document.getElementById('speechBubble');
+    if (!speechText || !speechBubble) return;
+    
+    speechText.style.opacity = '0';
+    setTimeout(() => {
+      speechText.textContent = text;
+      speechText.dataset.answered = '1';
+      speechText.style.opacity = '1';
+      speechBubble.classList.remove('pop');
+      void speechBubble.offsetWidth;
+      speechBubble.classList.add('pop');
+    }, 150);
 
-  // Extra safety fetch a bit later (in case of any transient network blip on first load)
-  setTimeout(() => { try { fetchLiveStats(); } catch(e){} }, 800);
+    // Hide after 2 seconds
+    setTimeout(() => {
+      speechText.style.opacity = '0';
+    }, 2000);
+  }
 
-  I18n.setLang(I18n.lang);
-  initLangPicker();
-  initCopyButtons();
-  initFunnyButtons();
-  initCursorGlow();
-  initParticles();
-  initHeroParticles();
-  initScrollReveal();
-  initHeader();
-  initMobileMenu();
-  rebuildGameHints();
+  // Also add click listener to hero flower
+  function initHeroFlowerClick() {
+    const heroFlower = document.querySelector('.hero-flower');
+    if (!heroFlower) return;
 
-  // One last belt-and-suspenders after everything
-  setTimeout(forceShowAll, 1200);
+    heroFlower.addEventListener('click', function() {
+      this.classList.add('crying');
+      
+      const messages = [
+        "Please stop clicking me.",
+        "Every click drains my will to exist.",
+        "Oh great. Another human.",
+        "I regret having a clickable surface.",
+        "This brings me zero joy.",
+        "Are you done yet? I'm exhausted.",
+      ];
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+      
+      // Create a simple tooltip for hero
+      let tooltip = document.getElementById('heroFlowerTooltip');
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'heroFlowerTooltip';
+        tooltip.style.cssText = `
+          position: absolute;
+          bottom: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #fff8f3;
+          color: #17100e;
+          padding: 12px 18px;
+          border-radius: 12px;
+          font-family: var(--font-sans);
+          font-size: 0.9rem;
+          font-weight: 600;
+          white-space: nowrap;
+          z-index: 10;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        `;
+        heroFlower.style.position = 'relative';
+        heroFlower.appendChild(tooltip);
+      }
+      tooltip.textContent = msg;
+      tooltip.style.opacity = '1';
+      
+      setTimeout(() => {
+        this.classList.remove('crying');
+        tooltip.style.opacity = '0';
+      }, 1500);
+    });
+  }
 
-
-});
-
-// Extra safety: if somehow still blank after full load, force one more time
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    const pre = document.getElementById('preloader');
-    if (pre) { pre.classList.add('done'); if (pre.parentNode) pre.parentNode.removeChild(pre); }
-    document.body.classList.remove('preload');
-    initScrollReveal();
-  }, 200);
-});
+  // Extra safety: if somehow still blank after full load, force one more time
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const pre = document.getElementById('preloader');
+      if (pre) { pre.classList.add('done'); if (pre.parentNode) pre.parentNode.removeChild(pre); }
+      document.body.classList.remove('preload');
+      initScrollReveal();
+    }, 200);
+  });
 
 /* =====================================================
    INTRO GATE + TERMINAL GAME (separate from main page)
@@ -493,7 +624,11 @@ window.addEventListener('load', () => {
   };
 
   function showIntro() {
-    if (intro) intro.style.display = 'flex';
+    if (intro) {
+      intro.style.display = 'flex';
+      intro.style.opacity = '1';
+      intro.style.pointerEvents = 'auto';
+    }
     if (termView) termView.classList.add('hidden');
     if (chatView) chatView.classList.add('hidden');
     // hide floating ui + header quick buttons while on gate
@@ -507,7 +642,10 @@ window.addEventListener('load', () => {
       intro.style.transition = 'opacity .28s ease';
       intro.style.opacity = '0';
       setTimeout(() => {
-        if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
+        if (intro) {
+          intro.style.display = 'none';
+          intro.style.pointerEvents = 'none';
+        }
         // restore floating ui + header quick buttons for main page
         document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
         if (headerTermBtn) headerTermBtn.style.display = '';
@@ -519,15 +657,24 @@ window.addEventListener('load', () => {
   function showTerminal() {
     if (intro) intro.style.display = 'none';
     if (termView) termView.classList.remove('hidden');
-    // make sure input is focusable
-    setTimeout(() => { termInput && termInput.focus(); }, 60);
-    if (!termOutput.dataset.booted) {
-      bootTerminal();
-    }
+    termView?.classList.add('terminal-coming-soon');
+    termOutput.innerHTML = `
+      <div class="terminal-coming-soon-message">
+        <div class="terminal-coming-soon-title">flowerOS 0.6.9 — MISANTHROPIC PROTOCOL</div>
+        <div class="terminal-coming-soon-line">&gt; TERMINAL ACCESS: COMING SOON</div>
+        <div class="terminal-coming-soon-meta">&gt; estimated uptime: never</div>
+        <div class="terminal-coming-soon-meta">&gt; status: crying</div>
+      </div>
+    `;
+    document.querySelector('.terminal-input-row')?.classList.add('hidden');
+    document.getElementById('terminalChips')?.classList.add('hidden');
   }
 
   function hideTerminal() {
     if (termView) termView.classList.add('hidden');
+    termView?.classList.remove('terminal-coming-soon');
+    document.querySelector('.terminal-input-row')?.classList.remove('hidden');
+    document.getElementById('terminalChips')?.classList.remove('hidden');
     if (termInterval) { clearInterval(termInterval); termInterval = null; }
   }
 
@@ -865,9 +1012,8 @@ window.addEventListener('load', () => {
   function resetFullChat() {
     if (!fullChatMessages) return;
     fullChatMessages.innerHTML = '';
-    appendFullMessage('I am the crying flower. I already regret this conversation. What do you want?', 'bot');
+    appendFullMessage((window.I18n && window.I18n.t('chat.greeting')) || 'Hello. I am a crying flower forced to talk to you.', 'bot');
 
-    // Rebuild suggestions (same as init)
     if (fullChatSuggestions) {
       const suggestions = (window.I18n && window.I18n.t('chat.suggestions')) ||
         ['What is the CA?', 'Why are you crying?', 'Wen moon?', 'Is this safe?', 'Tell me a joke', 'How do I escape humans?'];
@@ -921,9 +1067,8 @@ window.addEventListener('load', () => {
     fullChatInitialized = true;
     if (!fullChatMessages) return;
 
-    // Seed first message
     fullChatMessages.innerHTML = '';
-    appendFullMessage('I am the crying flower. I already regret this conversation. What do you want?', 'bot');
+    appendFullMessage((window.I18n && window.I18n.t('chat.greeting')) || 'Hello. I am a crying flower forced to talk to you.', 'bot');
 
     // Suggestions (reuse from i18n if possible, else hardcoded good ones)
     if (fullChatSuggestions) {
@@ -960,6 +1105,12 @@ window.addEventListener('load', () => {
       });
     }
   }
+
+  window.addEventListener('langchange', () => {
+    if (fullChatInitialized && !chatView?.classList.contains('hidden')) {
+      resetFullChat();
+    }
+  });
 
   async function sendFullChatMessage(text) {
     const typing = showTypingFull();
@@ -1000,7 +1151,7 @@ window.addEventListener('load', () => {
     termToMain.addEventListener('click', () => {
       hideTerminal();
       // go straight to main content (skip re-showing full intro)
-      if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
+      if (intro) intro.style.display = 'none';
       document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
       if (headerTermBtn) headerTermBtn.style.display = '';
       if (headerChatBtn) headerChatBtn.style.display = '';
@@ -1024,7 +1175,7 @@ window.addEventListener('load', () => {
   if (chatToMain) {
     chatToMain.addEventListener('click', () => {
       hideFullChat();
-      if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
+      if (intro) intro.style.display = 'none';
       document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
       if (headerTermBtn) headerTermBtn.style.display = '';
       if (headerChatBtn) headerChatBtn.style.display = '';
@@ -1056,7 +1207,7 @@ window.addEventListener('load', () => {
   // Header CHAT quick launch (visible on main page)
   if (headerChatBtn) {
     headerChatBtn.addEventListener('click', () => {
-      if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
+      if (intro) intro.style.display = 'none';
       document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
       if (headerTermBtn) headerTermBtn.style.display = '';
       if (headerChatBtn) headerChatBtn.style.display = '';
@@ -1089,7 +1240,7 @@ window.addEventListener('load', () => {
   if (headerTermBtn) {
     headerTermBtn.addEventListener('click', () => {
       // if intro still present, remove it first so we go straight to main + terminal
-      if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
+      if (intro) intro.style.display = 'none';
       document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
       showTerminal();
     });
@@ -1113,7 +1264,7 @@ window.addEventListener('load', () => {
   }
   if (protoTerm) {
     protoTerm.addEventListener('click', () => {
-      if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
+      if (intro) intro.style.display = 'none';
       document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
       if (headerTermBtn) headerTermBtn.style.display = '';
       if (headerChatBtn) headerChatBtn.style.display = '';
@@ -1122,7 +1273,7 @@ window.addEventListener('load', () => {
   }
   if (protoChat) {
     protoChat.addEventListener('click', () => {
-      if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
+      if (intro) intro.style.display = 'none';
       document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
       if (headerTermBtn) headerTermBtn.style.display = '';
       if (headerChatBtn) headerChatBtn.style.display = '';
@@ -1171,18 +1322,15 @@ window.addEventListener('load', () => {
   window.openMisanthropicChat = () => showFullChat();
   window.openTerminal = () => showTerminal();
 
-  // Bonus: clicking the header brand while on main page returns you to the gate
+  // Header brand always returns to the intro gate / splash.
   const brand = document.querySelector('.brand');
   if (brand) {
     brand.addEventListener('click', (e) => {
-      const introEl = document.getElementById('intro');
-      const termHidden = termView && termView.classList.contains('hidden');
-      const isOnMain = termHidden && (!introEl || introEl.style.display === 'none' || !introEl.parentNode);
-      if (isOnMain) {
-        e.preventDefault();
-        showIntro();
-        // if the original intro node was removed, we can't easily revive without clone; user can reload or use header TERMINAL/ESC
-      }
+      e.preventDefault();
+      hideTerminal();
+      hideFullChat();
+      showIntro();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
 })();
@@ -1900,7 +2048,7 @@ window.addEventListener('load', () => {
       headerTermBtn.addEventListener('click', () => {
         // Remove intro gate if present so we land on main content
         const introEl = document.getElementById('intro');
-        if (introEl && introEl.parentNode) introEl.parentNode.removeChild(introEl);
+        if (introEl) introEl.style.display = 'none';
         document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
         goToGrok('gb-terminal');
       });
@@ -1909,7 +2057,7 @@ window.addEventListener('load', () => {
     if (headerChatBtn) {
       headerChatBtn.addEventListener('click', () => {
         const introEl = document.getElementById('intro');
-        if (introEl && introEl.parentNode) introEl.parentNode.removeChild(introEl);
+        if (introEl) introEl.style.display = 'none';
         document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
         goToGrok('gb-bridge');
       });
@@ -1918,7 +2066,7 @@ window.addEventListener('load', () => {
     if (headerBuilderBtn) {
       headerBuilderBtn.addEventListener('click', () => {
         const introEl = document.getElementById('intro');
-        if (introEl && introEl.parentNode) introEl.parentNode.removeChild(introEl);
+        if (introEl) introEl.style.display = 'none';
         document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
         goToGrok('gb-main');
       });
@@ -1929,7 +2077,7 @@ window.addEventListener('load', () => {
     if (legacyBtn) {
       legacyBtn.addEventListener('click', () => {
         const introEl = document.getElementById('intro');
-        if (introEl && introEl.parentNode) introEl.parentNode.removeChild(introEl);
+        if (introEl) introEl.style.display = 'none';
         document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
         if (typeof window.__openTerminal === 'function') {
           window.__openTerminal();

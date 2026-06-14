@@ -1,10 +1,10 @@
 (function () {
-  console.log('Game Engine Fixed');
-
   const canvas = document.getElementById('gameCanvas');
   if (!canvas) return;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+  if (!ctx) return;
+  ctx.imageSmoothingEnabled = true;
   const scoreEl = document.getElementById('scoreDisplay');
   const highScoreEl = document.getElementById('highScoreDisplay');
   const pumpEl = document.getElementById('pumpDisplay');
@@ -19,8 +19,9 @@
   const LOGIC_H = 420;
   const GRAVITY = 0.65;
   const JUMP_FORCE = -13;
-  const BASE_SPEED = 5;
-  const MAX_SPEED = 7.6; // hard cap so game never becomes unplayably fast later on
+  const BASE_SPEED = 4.1;
+  const MAX_SPEED = 5.6;
+  let renderScale = 1;
 
   function getDeathMessages() {
     const msgs = window.I18n?.t('game.death');
@@ -45,9 +46,6 @@
     try {
       return localStorage.getItem('misanthropic_high') || localStorage.getItem('misanthrope_high') || '0';
     } catch { return '0'; }
-  }
-  function setStoredScore(val) {
-    try { localStorage.setItem('misanthropic_high', val); } catch { /* ignore */ }
   }
   let highScore = parseInt(getStoredScore(), 10);
   let speed = BASE_SPEED;
@@ -82,21 +80,6 @@
     scoreEl.textContent = score;
     pumpEl.textContent = pump;
     highScoreEl.textContent = highScore;
-    // live auto status badge (added/removed dynamically)
-    const hsParent = highScoreEl && highScoreEl.parentElement;
-    let badge = hsParent && hsParent.querySelector('.auto-badge');
-    if (autoMode) {
-      if (!badge && hsParent) {
-        badge = document.createElement('span');
-        badge.className = 'auto-badge';
-        badge.style.cssText = 'font-size:10px;margin-left:6px;padding:1px 5px;border:1px solid #4ecdc4;color:#4ecdc4;border-radius:3px';
-        hsParent.appendChild(badge);
-      }
-      if (badge) badge.textContent = '★AUTO×' + (autoLoops || 0);
-      if (pumpEl) pumpEl.title = 'Auto loops: ' + autoLoops;
-    } else if (badge) {
-      badge.remove();
-    }
   }
 
   function startGame() {
@@ -118,7 +101,7 @@
       autoLoops++;
       // clear only dangerous stuff, preserve imminent collectibles so we don't lose stars
       obstacles = [];
-      const keepDist = 95;
+      const keepDist = 140;
       collectibles = collectibles.filter((c) => !c.collected && (c.x - player.x) < keepDist);
       tears = [];
       // reposition player safely on ground
@@ -163,17 +146,17 @@
       { emoji: '🤝', w: 42, h: 42 }, { emoji: '💼', w: 40, h: 44 },
     ];
     const type = types[Math.floor(Math.random() * types.length)];
-    obstacles.push({ x: canvas.width + 20, y: GROUND_Y + 52 - type.h, w: type.w, h: type.h, emoji: type.emoji });
+    obstacles.push({ x: LOGIC_W + 20, y: GROUND_Y + 52 - type.h, w: type.w, h: type.h, emoji: type.emoji });
   }
 
   function spawnCollectible() {
     const heights = [GROUND_Y - 30, GROUND_Y - 80, GROUND_Y - 130];
-    collectibles.push({ x: canvas.width + 20, y: heights[Math.floor(Math.random() * heights.length)], w: 28, h: 28, collected: false, spin: Math.random() * Math.PI * 2 });
+    collectibles.push({ x: LOGIC_W + 20, y: heights[Math.floor(Math.random() * heights.length)], w: 28, h: 28, collected: false, spin: Math.random() * Math.PI * 2 });
   }
 
   function initClouds() {
-    clouds = Array.from({ length: 6 }, (_, i) => ({
-      x: (canvas.width / 6) * i, y: 40 + Math.random() * 80, w: 80 + Math.random() * 60, speed: 0.3 + Math.random() * 0.5,
+    clouds = Array.from({ length: 4 }, (_, i) => ({
+      x: (LOGIC_W / 6) * i, y: 40 + Math.random() * 80, w: 80 + Math.random() * 60, speed: 0.3 + Math.random() * 0.5,
     }));
   }
 
@@ -185,8 +168,8 @@
   function update() {
     if (state !== 'playing') return;
     frame++;
-    // Much gentler speed ramp + hard cap. Game stays enjoyable even at high scores.
-    speed = Math.min(BASE_SPEED + Math.floor(score / 380) * 0.26, MAX_SPEED);
+    // Start at 1.0x and accelerate slowly so the run feels smooth instead of frantic.
+    speed = Math.min(BASE_SPEED + Math.floor(score / 520) * 0.12, MAX_SPEED);
     if (frame % 60 === 0) score++;
 
     player.vy += GRAVITY;
@@ -198,49 +181,40 @@
     const hSpeed = 4.8;
     if (keys['KeyA'] || keys['ArrowLeft']) player.x -= hSpeed;
     if (keys['KeyD'] || keys['ArrowRight']) player.x += hSpeed;
-    player.x = Math.max(35, Math.min(canvas.width - 65, player.x));
+    player.x = Math.max(35, Math.min(LOGIC_W - 65, player.x));
 
-    // AUTO MODE: perfect auto-jump to dodge humans + COLLECT EVERY STAR (predictive)
-    if (autoMode && state === 'playing' && player.grounded) {
-      const lookAhead = 150 + speed * 2.9;
-      for (let i = 0; i < obstacles.length; i++) {
-        const o = obstacles[i];
-        const dist = o.x - player.x;
-        if (dist > 8 && dist < lookAhead) {
-          if (o.y + o.h >= GROUND_Y - 12) {
+    // AUTO MODE: smooth dodge + reliable star collection.
+    if (autoMode && state === 'playing') {
+      if (player.grounded) {
+        const lookAhead = 170 + speed * 3.2;
+        for (let i = 0; i < obstacles.length; i++) {
+          const o = obstacles[i];
+          const dist = o.x - player.x;
+          if (dist > 10 && dist < lookAhead && o.y + o.h >= GROUND_Y - 12) {
             jump();
             break;
           }
         }
-      }
 
-      // === SMART STAR COLLECTOR: jump for high/mid stars at the right time ===
-      // We predict jump apex to line up perfectly with floating stars.
-      const starLook = 195 + speed * 3.4;
-      let jumpedForStar = false;
-      for (let i = 0; i < collectibles.length; i++) {
-        const c = collectibles[i];
-        if (c.collected) continue;
-        const dx = c.x - (player.x + 22);
-        if (dx > 18 && dx < starLook) {
-          const starHeight = GROUND_Y - c.y; // how high above ground (30/80/130)
-          const isHigh = starHeight > 70;
-          const isMidHigh = starHeight > 38;
-
-          // Jump lead tuned to apex timing so we are rising or at peak when star passes us.
-          // Jump apex ~19-21 frames. Distance = speed * lead.
-          const framesToPeak = isHigh ? 19.5 : 17;
-          const jumpLead = framesToPeak * speed * (isHigh ? 0.94 : 0.88);
-
-          if (dx < jumpLead + (isHigh ? 18 : 6)) {
-            jump();
-            jumpedForStar = true;
-            break;
+        const starLook = 215 + speed * 4;
+        for (let i = 0; i < collectibles.length; i++) {
+          const c = collectibles[i];
+          if (c.collected) continue;
+          const dx = c.x - (player.x + 22);
+          if (dx > 14 && dx < starLook) {
+            const starHeight = GROUND_Y - c.y;
+            const isHigh = starHeight > 70;
+            const framesToPeak = isHigh ? 19.5 : 17;
+            const jumpLead = framesToPeak * speed * (isHigh ? 0.96 : 0.9);
+            if (dx < jumpLead + (isHigh ? 26 : 10)) {
+              jump();
+              break;
+            }
           }
         }
       }
 
-      // Aggressive auto-steer (faster in auto) — head toward the next best star we can reach
+      // Strong steering so AUTO stays lined up with the next star even while airborne.
       let targetStar = null;
       let bestD = 9999;
       for (let i = 0; i < collectibles.length; i++) {
@@ -252,20 +226,20 @@
           targetStar = c;
         }
       }
-      if (targetStar && bestD < 320) {
-        const steerSpeed = 5.8; // much stronger horizontal in auto so we line up perfectly
+      if (targetStar && bestD < 360) {
+        const steerSpeed = player.grounded ? 5.4 : 4.6;
         const targetX = targetStar.x - 20;
         if (targetX < player.x - 4) player.x -= steerSpeed;
         else if (targetX > player.x + 4) player.x += steerSpeed;
       }
     }
 
-    if (frame % Math.max(55 - Math.floor(score / 100), 28) === 0) spawnObstacle();
-    if (frame % Math.max(90 - Math.floor(score / 80), 40) === 0) spawnCollectible();
+    if (frame % Math.max(74 - Math.floor(score / 140), 44) === 0) spawnObstacle();
+    if (frame % Math.max(88 - Math.floor(score / 120), 52) === 0) spawnCollectible();
 
     obstacles.forEach((o) => { o.x -= speed; });
     collectibles.forEach((c) => { c.x -= speed; c.spin += 0.08; });
-    clouds.forEach((c) => { c.x -= c.speed; if (c.x + c.w < 0) c.x = canvas.width + 20; });
+    clouds.forEach((c) => { c.x -= c.speed; if (c.x + c.w < 0) c.x = LOGIC_W + 20; });
     tears.forEach((t) => { t.y += t.vy; t.life--; });
     tears = tears.filter((t) => t.life > 0);
 
@@ -274,7 +248,16 @@
     for (const c of collectibles) {
       if (!c.collected && rectsOverlap(pb, c)) {
         c.collected = true; pump++; score += 25;
-        for (let i = 0; i < 5; i++) tears.push({ x: c.x, y: c.y, vy: -1, life: 30 });
+        for (let i = 0; i < 3; i++) tears.push({ x: c.x, y: c.y, vy: -1, life: 24 });
+      } else if (autoMode && !c.collected) {
+        const px = player.x + player.w / 2;
+        const py = player.y + player.h / 2;
+        const cx = c.x + c.w / 2;
+        const cy = c.y + c.h / 2;
+        if (Math.abs(cx - px) < 36 && Math.abs(cy - py) < 48) {
+          c.collected = true; pump++; score += 25;
+          for (let i = 0; i < 2; i++) tears.push({ x: c.x, y: c.y, vy: -0.8, life: 20 });
+        }
       }
     }
     obstacles = obstacles.filter((o) => o.x + o.w > -20);
@@ -283,17 +266,17 @@
   }
 
   function drawBackground() {
-    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    const grad = ctx.createLinearGradient(0, 0, 0, LOGIC_H);
     grad.addColorStop(0, '#3d2518'); grad.addColorStop(0.5, '#5c3828'); grad.addColorStop(1, '#2a1a12');
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, LOGIC_W, LOGIC_H);
     clouds.forEach((c) => {
       ctx.fillStyle = 'rgba(255,248,243,0.06)';
       ctx.beginPath(); ctx.ellipse(c.x, c.y, c.w / 2, 20, 0, 0, Math.PI * 2); ctx.fill();
     });
-    ctx.fillStyle = '#1a1210'; ctx.fillRect(0, GROUND_Y + 52, canvas.width, canvas.height - GROUND_Y - 52);
+    ctx.fillStyle = '#1a1210'; ctx.fillRect(0, GROUND_Y + 52, LOGIC_W, LOGIC_H - GROUND_Y - 52);
     ctx.strokeStyle = 'rgba(201,111,74,0.4)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(0, GROUND_Y + 52); ctx.lineTo(canvas.width, GROUND_Y + 52); ctx.stroke();
-    for (let i = 0; i < canvas.width; i += 40) {
+    ctx.beginPath(); ctx.moveTo(0, GROUND_Y + 52); ctx.lineTo(LOGIC_W, GROUND_Y + 52); ctx.stroke();
+    for (let i = 0; i < LOGIC_W; i += 40) {
       ctx.fillStyle = 'rgba(201,111,74,0.15)';
       ctx.fillRect(i - (frame * speed * 0.5) % 40, GROUND_Y + 58, 20, 4);
     }
@@ -318,16 +301,6 @@
     }
     ctx.restore();
 
-    // Auto glow ring (subtle perfect-collector aura)
-    if (autoMode) {
-      ctx.strokeStyle = 'rgba(78,205,196,0.55)';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.arc(player.x + player.w/2, player.y + player.h/2, player.w/2 + 7, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.lineWidth = 1;
-    }
-
     if (frame % 30 < 15) {
       ctx.fillStyle = '#4ecdc4';
       ctx.beginPath(); ctx.ellipse(player.x + 34, player.y + 22, 4, 6, 0.3, 0, Math.PI * 2); ctx.fill();
@@ -343,7 +316,7 @@
     collectibles.forEach((c) => {
       if (c.collected) return;
       ctx.save(); ctx.translate(c.x + c.w / 2, c.y + c.h / 2); ctx.rotate(c.spin);
-      ctx.fillStyle = '#fff8f3'; ctx.shadowColor = '#c96f4a'; ctx.shadowBlur = 12;
+      ctx.fillStyle = '#fff8f3'; ctx.shadowColor = '#c96f4a'; ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.moveTo(0, -12); ctx.lineTo(4, -4); ctx.lineTo(12, -4); ctx.lineTo(6, 2);
       ctx.lineTo(8, 12); ctx.lineTo(0, 7); ctx.lineTo(-8, 12); ctx.lineTo(-6, 2);
@@ -366,21 +339,12 @@
     ctx.fillStyle = isMax ? '#4ecdc4' : 'rgba(255,248,243,0.7)';
     ctx.font = '600 14px Space Grotesk, sans-serif';
     ctx.textAlign = 'left';
-    const speedStr = speed.toFixed(1) + (isMax ? ' (MAX)' : '');
+    const speedStr = `${(speed / BASE_SPEED).toFixed(1)}x`;
     ctx.fillText(t('game.speed') + ': ' + speedStr, 16, 28);
-
-    // Nice on-canvas AUTO indicator (visible when running perfectly)
-    if (autoMode) {
-      ctx.fillStyle = 'rgba(78, 205, 196, 0.92)';
-      ctx.font = '700 12.5px Space Grotesk, sans-serif';
-      ctx.textAlign = 'left';
-      // place nicely on right side, adapts to resized canvas
-      const rightTextX = Math.min(770, canvas.width - 130);
-      ctx.fillText('★ AUTO — CATCHING EVERY STAR', rightTextX, 28);
-    }
   }
 
   function draw() {
+    ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
     ctx.save();
     if (shakeTimer > 0) {
       ctx.translate((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8);
@@ -395,18 +359,23 @@
   function handleResize() {
     const parent = canvas.parentElement;
     if (!parent) return;
-    const w = parent.clientWidth;
+    const w = Math.max(parent.clientWidth, 320);
     const aspect = LOGIC_W / LOGIC_H;
+    const h = w / aspect;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     canvas.style.width = w + 'px';
-    canvas.style.height = (w / aspect) + 'px';
+    canvas.style.height = h + 'px';
 
-    // Keep fixed logical resolution — scale via CSS only (prevents coordinate bugs)
-    if (canvas.width !== LOGIC_W || canvas.height !== LOGIC_H) {
-      canvas.width = LOGIC_W;
-      canvas.height = LOGIC_H;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const nextWidth = Math.round(w * dpr);
+    const nextHeight = Math.round(h * dpr);
+    if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+      canvas.width = nextWidth;
+      canvas.height = nextHeight;
     }
+    renderScale = canvas.width / LOGIC_W;
+    ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+    ctx.imageSmoothingEnabled = true;
   }
 
   // === AUTO INFINITE MODE (perfect star collector — catches every star, infinite run, no deaths) ===
@@ -424,49 +393,39 @@
     }
     updateHUD();
     if (autoBtnEl) {
-      autoBtnEl.textContent = autoMode ? '∞ AUTO RUNNING (STOP)' : '∞ AUTO (infinite run)';
-      autoBtnEl.style.borderColor = autoMode ? '#4ecdc4' : '';
-      autoBtnEl.style.color = autoMode ? '#4ecdc4' : '';
+      autoBtnEl.textContent = 'AUTO';
+      autoBtnEl.classList.toggle('is-active', autoMode);
+      autoBtnEl.setAttribute('aria-pressed', autoMode ? 'true' : 'false');
     }
   }
 
   let autoBtnEl = null;
+  let headerToolsEl = null;
+
+  function getHeaderTools() {
+    if (headerToolsEl && document.body.contains(headerToolsEl)) return headerToolsEl;
+    const header = document.querySelector('#game .game-header');
+    if (!header) return null;
+    headerToolsEl = header.querySelector('.game-header-tools');
+    if (!headerToolsEl) {
+      headerToolsEl = document.createElement('div');
+      headerToolsEl.className = 'game-header-tools';
+      header.appendChild(headerToolsEl);
+    }
+    return headerToolsEl;
+  }
 
   function createAutoButton() {
-    const headerRight = document.querySelector('#game .game-header');
-    if (!headerRight) return null;
+    const tools = getHeaderTools();
+    if (!tools) return null;
     const btn = document.createElement('button');
-    btn.className = 'btn btn-ghost';
-    btn.style.cssText = 'font-size:12px;padding:6px 10px;margin-left:10px;border-color:#c96f4a;color:#c96f4a';
-    btn.textContent = '∞ AUTO (infinite run)';
-    btn.title = 'Auto plays perfectly: dodges all humans + catches EVERY star. Infinite loops, no death screens. Score & pumps climb forever.';
+    btn.className = 'btn btn-ghost game-mode-btn';
+    btn.textContent = 'AUTO';
+    btn.title = 'Autopilot runs cleanly, avoids humans, and collects stars.';
     btn.addEventListener('click', () => {
       setAutoMode(!autoMode);
     });
-    // place it nicely in the header next to stats
-    headerRight.appendChild(btn);
-    return btn;
-  }
-
-  function createShareRunButton() {
-    const headerRight = document.querySelector('#game .game-header');
-    if (!headerRight) return null;
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-ghost';
-    btn.style.cssText = 'font-size:11px;padding:5px 9px;margin-left:6px;border-color:#4ecdc4;color:#4ecdc4;opacity:0.9';
-    btn.textContent = '⤴ Share run';
-    btn.title = 'Copy a nice summary of your current score + pumps (great for X @getmisanthropic when showing the perfect AUTO)';
-    btn.addEventListener('click', () => {
-      const msg = `MISANTHROPIC RUN — Score: ${score}  Pumps: ${pump}${autoMode ? `  (AUTO×${autoLoops || 0})` : ''}\nCrying flower dodged humans & collected every star.\nPlay: https://misanthropic.site  CA: AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG\n\n@getmisanthropic`;
-      navigator.clipboard.writeText(msg).then(() => {
-        const old = btn.textContent;
-        btn.textContent = '✓ Copied!';
-        setTimeout(() => { btn.textContent = old; }, 1400);
-      }).catch(() => {
-        prompt('Copy this run:', msg);
-      });
-    });
-    headerRight.appendChild(btn);
+    tools.appendChild(btn);
     return btn;
   }
 
@@ -549,9 +508,8 @@
 
   window.addEventListener('resize', handleResize);
 
-  // create the auto infinite button + share run + support direct ?auto launch
+  // create the auto button + support direct ?auto launch
   autoBtnEl = createAutoButton();
-  createShareRunButton();
   checkUrlAuto();
 
   initClouds(); handleResize(); loop();
