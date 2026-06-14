@@ -600,79 +600,90 @@ document.addEventListener('DOMContentLoaded', () => {
   const headerTermBtn = document.getElementById('headerTermBtn');
   const headerChatBtn = document.getElementById('headerChatBtn');
 
-  // Trending coins - fetch from pump.fun API
+  // Trending coins - fetch from DexScreener API
+  let trendingRefreshInterval = null;
+  let currentCoins = [];
+
   async function fetchTrendingCoins() {
-    const track = document.getElementById('trendingTrack');
-    if (!track) return;
-    
     try {
-      // Fetch trending coins from pump.fun API
-      const response = await fetch('https://frontend-api.pump.fun/coins/trending');
+      // Fetch trending Solana tokens from DexScreener
+      const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/solana');
       if (!response.ok) throw new Error('Failed to fetch trending coins');
       
-      const coins = await response.json();
+      const data = await response.json();
+      // Get the first 20 pairs (tokens)
+      currentCoins = (data.pairs || []).slice(0, 20).map(pair => ({
+        name: pair.baseToken.name || 'Unknown',
+        symbol: pair.baseToken.symbol || '',
+        mint: pair.baseToken.address,
+        image_uri: pair.info?.imageUrl || '',
+        usd_market_cap: pair.fdv || 0,
+        priceUsd: pair.priceUsd || 0,
+        volume24h: pair.volume?.h24 || 0
+      }));
       
-      // Render the coins
-      track.innerHTML = coins.map(coin => {
-        const marketCap = coin.usd_market_cap 
-          ? (coin.usd_market_cap >= 1e6 
-              ? `$${(coin.usd_market_cap / 1e6).toFixed(2)}M` 
-              : (coin.usd_market_cap >= 1e3 
-                  ? `$${(coin.usd_market_cap / 1e3).toFixed(1)}K` 
-                  : `$${coin.usd_market_cap.toFixed(0)}`))
-          : '—';
-        
-        return `
-          <div class="trending-card" style="cursor: pointer;" onclick="window.open('https://pump.fun/${coin.mint}', '_blank')">
-            <img src="${coin.image_uri || 'https://placehold.co/240x140/gray/white?text=🪙'}" alt="${coin.name}" class="trending-image" onerror="this.src='https://placehold.co/240x140/gray/white?text=🪙'">
-            <div class="trending-content">
-              <div class="trending-mcap">${marketCap}</div>
-              <div class="trending-name">${coin.name} ${coin.symbol ? `($${coin.symbol})` : ''}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
+      // Render to both sections if they exist
+      renderTrendingCoinsToElement('trendingMainTrack');
+      renderTrendingCoinsToElement('trendingScannerTrack');
       
     } catch (error) {
       console.error('Error fetching trending coins:', error);
       // Fallback to mock data
-      const mockTrendingCoins = [
-        { name: 'Misanthropic', mint: 'AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG', image_uri: 'assets/flower.png', usd_market_cap: 2340000 },
-        { name: 'Drooling Cat', mint: '79H4C1V3L1C8T5P8Y9M3Z2K1Q4W7E8R9T0Y', image_uri: 'https://placehold.co/240x140/orange/white?text=🐱', usd_market_cap: 1280000 },
-        { name: 'Kintara', mint: 'K1NT4R4C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/teal/white?text=🃏', usd_market_cap: 15200000 },
-        { name: 'Bountywork', mint: 'B0UNTYW0RKC01N4DDR3SS12345', image_uri: 'https://placehold.co/240x140/green/white?text=💼', usd_market_cap: 593000 },
-        { name: 'Jotchua', mint: 'J0TCHU4C01N4DDR3SS12345678', image_uri: 'https://placehold.co/240x140/pink/white?text=🐕', usd_market_cap: 5850000 },
-        { name: 'Three', mint: 'THR33C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/purple/white?text=3️⃣', usd_market_cap: 3490000 }
+      currentCoins = [
+        { name: 'Misanthropic', symbol: 'MIS', mint: 'AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG', image_uri: 'assets/flower.png', usd_market_cap: 2340000 },
+        { name: 'Drooling Cat', symbol: 'DRCAT', mint: '79H4C1V3L1C8T5P8Y9M3Z2K1Q4W7E8R9T0Y', image_uri: 'https://placehold.co/240x140/orange/white?text=🐱', usd_market_cap: 1280000 },
+        { name: 'Kintara', symbol: 'KINT', mint: 'K1NT4R4C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/teal/white?text=🃏', usd_market_cap: 15200000 },
+        { name: 'Bountywork', symbol: 'BOUNTY', mint: 'B0UNTYW0RKC01N4DDR3SS12345', image_uri: 'https://placehold.co/240x140/green/white?text=💼', usd_market_cap: 593000 },
+        { name: 'Jotchua', symbol: 'JOT', mint: 'J0TCHU4C01N4DDR3SS12345678', image_uri: 'https://placehold.co/240x140/pink/white?text=🐕', usd_market_cap: 5850000 },
+        { name: 'Three', symbol: 'THREE', mint: 'THR33C01N4DDR3SS1234567890', image_uri: 'https://placehold.co/240x140/purple/white?text=3️⃣', usd_market_cap: 3490000 }
       ];
       
-      track.innerHTML = mockTrendingCoins.map(coin => {
-        const marketCap = coin.usd_market_cap 
-          ? (coin.usd_market_cap >= 1e6 
-              ? `$${(coin.usd_market_cap / 1e6).toFixed(2)}M` 
-              : (coin.usd_market_cap >= 1e3 
-                  ? `$${(coin.usd_market_cap / 1e3).toFixed(1)}K` 
-                  : `$${coin.usd_market_cap.toFixed(0)}`))
-          : '—';
-        
-        return `
-          <div class="trending-card" style="cursor: pointer;" onclick="window.open('https://pump.fun/${coin.mint}', '_blank')">
-            <img src="${coin.image_uri}" alt="${coin.name}" class="trending-image" onerror="this.src='https://placehold.co/240x140/gray/white?text=🪙'">
-            <div class="trending-content">
-              <div class="trending-mcap">${marketCap}</div>
-              <div class="trending-name">${coin.name}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
+      renderTrendingCoinsToElement('trendingMainTrack');
+      renderTrendingCoinsToElement('trendingScannerTrack');
     }
+  }
+
+  function renderTrendingCoinsToElement(elementId) {
+    const track = document.getElementById(elementId);
+    if (!track) return;
+    
+    track.innerHTML = currentCoins.map(coin => {
+      const marketCap = coin.usd_market_cap 
+        ? (coin.usd_market_cap >= 1e6 
+            ? `$${(coin.usd_market_cap / 1e6).toFixed(2)}M` 
+            : (coin.usd_market_cap >= 1e3 
+                ? `$${(coin.usd_market_cap / 1e3).toFixed(1)}K` 
+                : `$${coin.usd_market_cap.toFixed(0)}`))
+        : '—';
+      
+      // Fix image URI - use DexScreener image or fallback
+      let imageSrc = coin.image_uri;
+      if (!imageSrc || imageSrc === '') {
+        imageSrc = 'https://placehold.co/240x140/gray/white?text=🪙';
+      }
+      
+      return `
+        <div class="trending-card" style="cursor: pointer;" onclick="window.open('https://dexscreener.com/solana/${coin.mint}', '_blank')">
+          <img src="${imageSrc}" alt="${coin.name}" class="trending-image" onerror="this.src='https://placehold.co/240x140/gray/white?text=🪙'">
+          <div class="trending-content">
+            <div class="trending-mcap">${marketCap}</div>
+            <div class="trending-name">${coin.name} ${coin.symbol ? `($${coin.symbol})` : ''}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   function renderTrendingCoins() {
     fetchTrendingCoins();
+    // Start auto-refresh every 5 seconds
+    if (!trendingRefreshInterval) {
+      trendingRefreshInterval = setInterval(fetchTrendingCoins, 5000);
+    }
   }
 
-  function toggleTrendingSection() {
-    const section = document.getElementById('trending');
+  function toggleTrendingSection(sectionId) {
+    const section = document.getElementById(sectionId);
     if (!section) return;
     
     if (section.style.display === 'none') {
@@ -1296,6 +1307,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (enterMain) {
     enterMain.addEventListener('click', () => {
       hideIntro();
+      // Show trending section on main page
+      const trendingMain = document.getElementById('trending-main');
+      if (trendingMain) {
+        trendingMain.style.display = 'block';
+        renderTrendingCoins();
+      }
       // ensure normal page elements are interactive and we land nicely
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1348,13 +1365,13 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
       if (headerTermBtn) headerTermBtn.style.display = '';
       if (headerChatBtn) headerChatBtn.style.display = '';
-      // show trending section and scroll to it
-      const trendingSection = document.getElementById('trending');
-      if (trendingSection) {
-        trendingSection.style.display = 'block';
+      // show trending scanner section and scroll to it
+      const trendingScanner = document.getElementById('trending-scanner');
+      if (trendingScanner) {
+        trendingScanner.style.display = 'block';
         renderTrendingCoins();
         setTimeout(() => {
-          trendingSection.scrollIntoView({ behavior: 'smooth' });
+          trendingScanner.scrollIntoView({ behavior: 'smooth' });
         }, 100);
       }
     });
@@ -1391,6 +1408,34 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => { fullChatInput && fullChatInput.focus(); }, 60);
     });
   }
+
+  // Trending navigation buttons
+  const trendingMainPrev = document.getElementById('trendingMainPrev');
+  const trendingMainNext = document.getElementById('trendingMainNext');
+  const trendingScannerPrev = document.getElementById('trendingScannerPrev');
+  const trendingScannerNext = document.getElementById('trendingScannerNext');
+  
+  function addTrendingNavigation(prevBtn, nextBtn, trackId) {
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        const track = document.getElementById(trackId);
+        if (track) {
+          track.scrollBy({ left: -280, behavior: 'smooth' });
+        }
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        const track = document.getElementById(trackId);
+        if (track) {
+          track.scrollBy({ left: 280, behavior: 'smooth' });
+        }
+      });
+    }
+  }
+  
+  addTrendingNavigation(trendingMainPrev, trendingMainNext, 'trendingMainTrack');
+  addTrendingNavigation(trendingScannerPrev, trendingScannerNext, 'trendingScannerTrack');
 
   // Header CHAT quick launch (visible on main page)
   if (headerChatBtn) {
