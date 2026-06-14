@@ -600,27 +600,46 @@ document.addEventListener('DOMContentLoaded', () => {
   const headerTermBtn = document.getElementById('headerTermBtn');
   const headerChatBtn = document.getElementById('headerChatBtn');
 
-  // Trending coins - fetch from DexScreener API
+  // Trending coins - fetch from pump.fun API
   let trendingRefreshInterval = null;
   let currentCoins = [];
 
   async function fetchTrendingCoins() {
     try {
-      // Fetch trending Solana tokens from DexScreener
-      const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/solana');
-      if (!response.ok) throw new Error('Failed to fetch trending coins');
+      console.log('Fetching trending coins from pump.fun...');
       
-      const data = await response.json();
-      // Get the first 20 pairs (tokens)
-      currentCoins = (data.pairs || []).slice(0, 20).map(pair => ({
-        name: pair.baseToken.name || 'Unknown',
-        symbol: pair.baseToken.symbol || '',
-        mint: pair.baseToken.address,
-        image_uri: pair.info?.imageUrl || '',
-        usd_market_cap: pair.fdv || 0,
-        priceUsd: pair.priceUsd || 0,
-        volume24h: pair.volume?.h24 || 0
+      // Try pump.fun API endpoint - older version might be more stable
+      const response = await fetch('https://frontend-api.pump.fun/coins/trending');
+      
+      if (!response.ok) {
+        console.error('Failed to fetch trending coins, status:', response.status);
+        throw new Error('Failed to fetch trending coins');
+      }
+      
+      const coins = await response.json();
+      console.log('Trending coins data:', coins);
+      
+      // Process the coins - make sure we have the right data structure
+      let processedCoins = [];
+      if (Array.isArray(coins)) {
+        processedCoins = coins;
+      } else if (coins.data && Array.isArray(coins.data)) {
+        processedCoins = coins.data;
+      } else if (coins.coins && Array.isArray(coins.coins)) {
+        processedCoins = coins.coins;
+      }
+      
+      currentCoins = processedCoins.slice(0, 20).map(coin => ({
+        name: coin.name || coin.title || 'Unknown',
+        symbol: coin.symbol || coin.ticker || '',
+        mint: coin.mint || coin.address || coin.tokenAddress || '',
+        image_uri: coin.image_uri || coin.image || coin.img || 'https://placehold.co/240x140/gray/white?text=🪙',
+        usd_market_cap: coin.usd_market_cap || coin.marketCap || coin.mcap || 0,
+        priceUsd: coin.priceUsd || coin.price || 0,
+        volume24h: coin.volume || coin.volume24h || 0
       }));
+      
+      console.log('Processed coins:', currentCoins);
       
       // Render to both sections if they exist
       renderTrendingCoinsToElement('trendingMainTrack');
@@ -645,7 +664,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderTrendingCoinsToElement(elementId) {
     const track = document.getElementById(elementId);
-    if (!track) return;
+    if (!track) {
+      console.error('Track element not found:', elementId);
+      return;
+    }
     
     track.innerHTML = currentCoins.map(coin => {
       const marketCap = coin.usd_market_cap 
@@ -656,14 +678,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 : `$${coin.usd_market_cap.toFixed(0)}`))
         : '—';
       
-      // Fix image URI - use DexScreener image or fallback
+      // Fix image URI - make sure it's a valid URL
       let imageSrc = coin.image_uri;
       if (!imageSrc || imageSrc === '') {
         imageSrc = 'https://placehold.co/240x140/gray/white?text=🪙';
       }
       
+      // Link to pump.fun
+      const pumpFunLink = coin.mint ? `https://pump.fun/${coin.mint}` : 'https://pump.fun';
+      
       return `
-        <div class="trending-card" style="cursor: pointer;" onclick="window.open('https://dexscreener.com/solana/${coin.mint}', '_blank')">
+        <div class="trending-card" style="cursor: pointer;" onclick="window.open('${pumpFunLink}', '_blank')">
           <img src="${imageSrc}" alt="${coin.name}" class="trending-image" onerror="this.src='https://placehold.co/240x140/gray/white?text=🪙'">
           <div class="trending-content">
             <div class="trending-mcap">${marketCap}</div>
