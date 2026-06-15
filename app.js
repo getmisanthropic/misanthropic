@@ -1343,25 +1343,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // === SCANNER VIEW WIRING ===
-  const enterScanner = document.getElementById('enterScanner');
-  if (enterScanner) {
-    enterScanner.addEventListener('click', () => {
-      hideIntro();
-      // ensure normal page elements are visible
-      document.querySelectorAll('.chat-fab, .back-top').forEach(el => el.style.display = '');
-      if (headerTermBtn) headerTermBtn.style.display = '';
-      if (headerChatBtn) headerChatBtn.style.display = '';
-      // show trending scanner section and scroll to it
-      const trendingScanner = document.getElementById('trending-scanner');
-      if (trendingScanner) {
-        trendingScanner.style.display = 'block';
-        renderTrendingCoins();
-        setTimeout(() => {
-          trendingScanner.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }
-    });
-  }
+  // Scanner is now a standalone page (scanner.html).
+  // The enterScanner element is an <a href="scanner.html"> link so no JS wiring
+  // is needed here. The old inline-toggle + setInterval pattern that caused the
+  // multiple-mount/stale-interval bug has been removed.
 
   if (chatToMain) {
     chatToMain.addEventListener('click', () => {

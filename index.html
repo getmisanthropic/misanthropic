@@ -42,6 +42,7 @@
         <a href="#game" data-i18n="nav.game">Game</a>
         <a href="#buy" data-i18n="nav.buy">Buy</a>
         <a href="#chat" data-i18n="nav.chat">Chat</a>
+        <a href="scanner.html" style="color:var(--orange-light);font-weight:700;">Scanner</a>
         <a href="#" id="headerTermBtn" class="term-launch">TERMINAL</a>
       </nav>
 
@@ -65,81 +66,47 @@
   <section id="intro" class="intro" style="display:flex">
     <div class="intro-bg" aria-hidden="true"></div>
     <div class="intro-inner">
+
       <div class="intro-logo">
-        <img src="assets/flower.png" alt="Crying flower mascot" width="92" height="92">
+        <img src="assets/flower.png" alt="Misanthropic flower" width="72" height="72">
         <div class="intro-tear"></div>
       </div>
-      <div class="intro-tag" data-i18n="hero.badge">SOLANA • PUMP.FUN • ELON-CERTIFIED IRONY</div>
-      <div class="hero-micro-live" aria-label="Site live status">
-        <span class="hero-micro-live-dot" aria-hidden="true"></span>
-        <span>NOW LIVE ON V2</span>
-      </div>
-      <h1 class="intro-title" data-i18n="hero.title">MISANTHROPIC</h1>
-      <p class="intro-sub" data-i18n="hero.tagline">Crying flower. Miserable coin. Happy holders. Escaping humanity has never been this profitable.</p>
+
+      <h1 class="intro-title">MISANTHROPIC</h1>
 
       <div class="intro-choices intro-choices-2x2">
         <button id="enterMain" class="choice-card">
           <div class="choice-icon">🌸</div>
-          <div class="choice-head" data-i18n="ui.enterMainHead">ENTER MAIN PAGE</div>
-          <div class="choice-desc" data-i18n="ui.enterMainDesc">Full site, game, stats, quiz.</div>
-          <div class="choice-action" data-i18n="ui.enterMainAction">CONTINUE →</div>
+          <div class="choice-head">$Misanthropic</div>
+          <div class="choice-desc">Main site. Game, stats, quiz, lore.</div>
+          <div class="choice-action">ENTER →</div>
         </button>
-        <button id="enterTerminal" class="choice-card terminal-card" style="opacity:0.55;position:relative;">
-          <div style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:8px;letter-spacing:1px;opacity:0.55;text-transform:uppercase;" data-i18n="ui.terminalSoon">COMING SOON</div>
-          <div class="choice-icon">💻</div>
-          <div class="choice-head" data-i18n="ui.terminalHead">TERMINAL</div>
-          <div class="choice-desc" data-i18n="ui.terminalDesc">flowerOS. Commands. Pure misanthropy.</div>
-        </button>
+        <a href="scanner.html" id="enterScanner" class="choice-card">
+          <div class="choice-icon">🔍</div>
+          <div class="choice-head">flowerOS Scanner</div>
+          <div class="choice-desc">Live Solana trending. Zero humans.</div>
+          <div class="choice-action">SCAN →</div>
+        </a>
         <button id="enterChat" class="choice-card">
           <div class="choice-icon">🗣️</div>
-          <div class="choice-head">TALK TO flowerOS</div>
-          <div class="choice-desc" data-i18n="ui.chatDesc">Regretful AI. Zero small talk. Full chat mode.</div>
-          <div class="choice-action" data-i18n="ui.chatAction">REGRET EVERYTHING →</div>
+          <div class="choice-head">talk to flowerOS</div>
+          <div class="choice-desc">Regretful AI. Zero small talk.</div>
+          <div class="choice-action">CHAT →</div>
         </button>
-        <button id="enterScanner" class="choice-card">
-          <div class="choice-icon">🔍</div>
-          <div class="choice-head">flowerOS SCANNER</div>
-          <div class="choice-desc">Pump.fun trending. Zero humans required.</div>
-          <div class="choice-action">SCAN →</div>
+        <button id="enterTerminal" class="choice-card terminal-card" style="opacity:0.5;position:relative;">
+          <div style="position:absolute;top:7px;right:7px;font-size:7px;letter-spacing:0.08em;opacity:0.5;text-transform:uppercase;font-weight:700;">soon</div>
+          <div class="choice-icon">💻</div>
+          <div class="choice-head">flowerOS Terminal</div>
+          <div class="choice-desc">Commands. Pure misanthropy.</div>
         </button>
       </div>
-      <p class="intro-foot" data-i18n="ui.introFoot">Four protocols. Zero humans. Pick your misery.</p>
     </div>
   </section>
+
 
   <main id="main" role="main">
 
-  <!-- Trending Section (main page) -->
-  <section id="trending-main" class="trending-section reveal" style="display:none;">
-    <div class="container">
-      <div class="trending-header">
-        <h2 class="trending-title">Trending</h2>
-        <div class="trending-controls">
-          <button id="trendingMainPrev" class="trending-nav-btn">←</button>
-          <button id="trendingMainNext" class="trending-nav-btn">→</button>
-        </div>
-      </div>
-      <div id="trendingMainTrack" class="trending-track">
-        <!-- Trending coins will be loaded here -->
-      </div>
-    </div>
-  </section>
-
-  <!-- Trending Section (scanner) -->
-  <section id="trending-scanner" class="trending-section reveal" style="display:none;">
-    <div class="container">
-      <div class="trending-header">
-        <h2 class="trending-title">Trending</h2>
-        <div class="trending-controls">
-          <button id="trendingScannerPrev" class="trending-nav-btn">←</button>
-          <button id="trendingScannerNext" class="trending-nav-btn">→</button>
-        </div>
-      </div>
-      <div id="trendingScannerTrack" class="trending-track">
-        <!-- Trending coins will be loaded here -->
-      </div>
-    </div>
-  </section>
+  <!-- Scanner is now a standalone page: scanner.html -->
 
   <!-- HERO -->
   <section class="hero reveal">
@@ -150,13 +117,7 @@
     </div>
 
     <div class="container hero-content">
-      <div class="hero-badge" data-i18n="hero.badge">Solana · pump.fun · Elon-certified irony</div>
-      <div class="hero-micro-live" aria-label="Site live status">
-        <span class="hero-micro-live-dot" aria-hidden="true"></span>
-        <span>NOW LIVE ON V2</span>
-      </div>
       <h1 class="hero-title" data-i18n="hero.title">Misanthropic</h1>
-      <p class="hero-tagline" data-i18n="hero.tagline">Crying flower. Miserable coin. Happy holders. Escaping humanity has never been this profitable.</p>
 
       <figure class="hero-quote">
         <blockquote data-i18n="hero.quote">"Any given AI company is destined to become the opposite of its name — Anthropic will, ironically, be Misanthropic."</blockquote>
@@ -443,10 +404,8 @@
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
-      <img src="assets/flower.png" alt="Misanthropic footer logo" width="54" height="54" loading="lazy" class="footer-logo">
-      <p data-i18n="footer.tag">$MISANTHROPIC — We hate people, we love charts.</p>
-      <span class="footer-ca">CA: AWQSXRxiNUGLj9moJMFhq2axqwu6Dqerp16ftj4FjLyG</span>
-      <p class="footer-rights" data-i18n="footer.rights">No rights reserved. No humans harmed (we wish).</p>
+      <img src="assets/flower.png" alt="Misanthropic footer logo" width="40" height="40" loading="lazy" class="footer-logo">
+      <p>flowerOS. All rights reserved <a href="https://x.com/getmisanthropic" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.2); text-underline-offset: 3px; transition: color 0.2s;">@getmisanthropic</a></p>
     </div>
   </footer>
 
